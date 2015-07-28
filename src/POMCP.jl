@@ -4,8 +4,8 @@ import POMDPs
 
 export
     POMCPSolver,
-    solve
-
+    solve,
+    action
 
 type POMCPSolver
     rollout_policy::POMDPs.Policy
