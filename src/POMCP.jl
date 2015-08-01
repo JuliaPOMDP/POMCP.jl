@@ -2,6 +2,9 @@ module POMCP
 
 import POMDPs
 
+import POMDPs.action
+import POMDPs.solve
+
 export
     POMCPSolver,
     solve,

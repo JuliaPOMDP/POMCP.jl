@@ -2,18 +2,24 @@
 # replace recursion with while loop
 # cache simulation results
 
+import Debug
+
+import Base.rand!
+import POMDPs.update_belief!
+
 type POMCPPolicy <: POMDPs.Policy
     problem::POMDPs.POMDP
     solver::POMCPSolver
     rng::AbstractRNG
 end
 
-type ParticleCollection{S} <: POMDPs.Belief
-    particles::Set{S}
+# XXX Need to implement ==, hash
+type ParticleCollection <: POMDPs.Belief
+    particles::Array{Any,1}
 end
-ParticleCollection{S}() = ParticleCollection(S[])
-function rand!{S}(rng::AbstractRNG, sample, b::ParticleCollection{S})
-    return b[ceil(rand(rng)*length(b))]
+ParticleCollection() = ParticleCollection({})
+function rand!(rng::AbstractRNG, sample, b::ParticleCollection)
+    return b.particles[ceil(rand(rng)*length(b.particles))]
 end
 
 type ActNode
@@ -32,7 +38,7 @@ end
 
 # do all the computation necessary to pick the next action
 function action(policy::POMCPPolicy, belief::POMDPs.Belief)
-    return search(policy, belief)
+    return search(policy, belief, policy.solver.timeout)
 end
 
 # just return a properly constructed POMCP policy object
@@ -43,57 +49,65 @@ end
 # Search for the best next move
 function search(pomcp::POMCPPolicy, belief::POMDPs.Belief, timeout) 
 	finish_time = time() + timeout
-	num_sim = 0
 	# cache = SimulateCache{S}()
-    #XXX need some way to get the state type
-    s = create_state(pomcp.problem)
+    s = POMDPs.create_state(pomcp.problem)
+    # XXX convert belief to a particle filter or support analytically updated beliefs
+    root = ObsNode("root", 0, belief, {})
 	while time() < finish_time
 		rand!(pomcp.rng, s, belief)
-        root = Node("root", 0, -Inf, belief, Node[])
-		simulate(pomcp, copy(s), root, 0) # cache)
-		num_sim += 1
+		simulate(pomcp, root, deepcopy(s), 0) # cache)
+        root.N += 1
+        # push!(roots, root)
 	end
-	best_ind = indmax([action.V for action in root.children])
-    return root.children[best_ind].label, num_sim
+    println("Search complete. Tree queried $(root.N) times")
+    # average_values = Array(Any, length(POMDPs.actions(pomcp.problem)))
+    # for i in 1:length(average_values)
+    #     average_values[i] = mean([roots[j].children[i].V for j in 1:length(roots)])
+    # end
+	# best_ind = indmax(average_values)
+    best_ind = indmax([action.V for action in root.children])
+    return root.children[best_ind].label
 end
 
 function simulate(pomcp::POMCPPolicy, h::ObsNode, s, depth) # cache::SimulateCache)
 
-    if discount(pomcp.problem)^depth < pomcp.solver.eps
+    if POMDPs.discount(pomcp.problem)^depth < pomcp.solver.eps
         return 0
     end
 	if length(h.children) == 0
-        action_space = actions(pomcp.problem)
-		h.children = Array(ActNode, length(action_space))
+        action_space = POMDPs.actions(pomcp.problem)
+        # Debug.@bp
+		h.children = Array(Any, length(action_space))
 		for i in 1:length(h.children)
-			h.children[i] = ActNode(action_space[i], 0, -Inf)
+			h.children[i] = ActNode(action_space[i], 0, -Inf, {})
 		end
 
 		return rollout(pomcp, s, h, depth)
 	end
 
+    #XXX what happens here if V is negative infinity
     best_ind = indmax([action.V + pomcp.solver.c*sqrt(log(h.N)/action.N) for action in h.children])
     a = h.children[best_ind].label
 
-    r = reward(pomcp.problem, s, a)
+    r = POMDPs.reward(pomcp.problem, s, a)
 
-    obs_dist = create_observation(pomcp.problem)
-    trans_dist = create_transition(pomcp.problem)
-    sp = create_state(pomcp.problem)
-    o = create_obs(pomcp.problem)
+    obs_dist = POMDPs.create_observation_distribution(pomcp.problem)
+    trans_dist = POMDPs.create_transition_distribution(pomcp.problem)
+    sp = POMDPs.create_state(pomcp.problem)
+    o = POMDPs.create_observation(pomcp.problem)
 
-    transition!(trans_dist, pomcp.problem, s, a)
+    POMDPs.transition!(trans_dist, pomcp.problem, s, a)
     rand!(pomcp.rng, sp, trans_dist)
 
-    observation!(obs_dist, pomcp.problem, sp, a)
+    POMDPs.observation!(obs_dist, pomcp.problem, sp, a)
     rand!(pomcp.rng, o, obs_dist)
 
-    hao = ObsNode(o, 0, ParticleCollection{typeof(s)}())
-    push!(h.children[best_ind], hao)
+    hao = ObsNode(o, 0, ParticleCollection(), {})
+    push!(h.children[best_ind].children, hao)
 
-    R = r + discount*simulate(pomcp, sp, hao, depth+1)
+    R = r + POMDPs.discount(pomcp.problem)*simulate(pomcp, hao, sp, depth+1)
 
-    push!(h.B, s)
+    push!(h.B.particles, s)
     h.N += 1
 
     h.children[best_ind].N += 1
@@ -103,37 +117,15 @@ function simulate(pomcp::POMCPPolicy, h::ObsNode, s, depth) # cache::SimulateCac
 end
 
 function rollout(pomcp::POMCPPolicy, start_state, h::ObsNode, depth)
-    discount = discount(pomcp.problem)
-    discount_at_depth = discount^depth
-    r = 0
-    s = deepcopy(start_state)
     b = belief_from_node(pomcp.problem, h)
-
-    obs_dist = create_observation(pomcp.problem)
-    trans_dist = create_transition(pomcp.problem)
-    sp = create_state(pomcp.problem)
-    o = create_obs(pomcp.problem)
-
-    while discount_at_depth >= pomcp.solver.eps && !isterminal(s)
-        a = get_action(pomcp.solver.rollout_policy, b)
-        r += discount_at_depth*reward(pomcp.problem, s, a)
-
-        transition!(trans_dist, pomcp.problem, s, a)
-        rand!(pomcp.rng, sp, trans_dist)
-
-        observation!(obs_dist, pomcp.problem, sp, a)
-        rand!(pomcp.rng, o, obs_dist)
-
-        # alternates using the memory allocated for s and sp so nothing has to be allocated
-        tmp = s
-        s = sp
-        sp = tmp
-
-        update_belief!(b, pomcp.problem, a, o)
-
-        discount_at_depth*=discount
-    end
-    return r
+    r = POMDPs.simulate(pomcp.problem,
+                        pomcp.solver.rollout_policy,
+                        b,
+                        rng=pomcp.solver.rng,
+                        eps=pomcp.solver.eps,
+                        initial_state=start_state)
+    h.N += 1
+    return POMDPs.discount(pomcp.problem)^depth * r
 end
 
 
