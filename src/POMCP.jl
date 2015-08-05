@@ -12,10 +12,10 @@ export
 
 type POMCPSolver
     rollout_policy::POMDPs.Policy
-    eps # will stop simulations when discount^depth is less than this
-    c
-    timeout
-    rng
+    eps::Float64 # will stop simulations when discount^depth is less than this
+    c::Float64
+    timeout::Float64
+    rng::AbstractRNG
 end
 
 include("solver.jl")

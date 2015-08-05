@@ -18,11 +18,21 @@ rng = MersenneTwister(1)
 solver = POMCP.POMCPSolver(RandomBabyPolicy(rng),
                      0.01,
                      10,
-                     0.1,
+                     0.01,
                      rng)
 
 policy = POMCP.solve(solver, problem)
 
-@show pomcp_reward = POMDPs.simulate(problem, policy, POMDPModels.BabyStateDistribution(0.0), rng=rng, eps=.1)
+sim_rng = MersenneTwister(1)
 
-@show random_reward = POMDPs.simulate(problem, RandomBabyPolicy(rng), POMDPModels.BabyStateDistribution(0.0), rng=rng, eps=.1)
+@show pomcp_reward = POMDPs.simulate(problem, policy, POMDPModels.BabyStateDistribution(0.0), rng=sim_rng, eps=.1)
+
+sim_rng = MersenneTwister(1)
+pol_rng = MersenneTwister(2)
+
+@show random_reward = POMDPs.simulate(problem, RandomBabyPolicy(pol_rng), POMDPModels.BabyStateDistribution(0.0), rng=sim_rng, eps=.1)
+
+sim_rng = MersenneTwister(1)
+pol_rng = MersenneTwister(2)
+
+@show random_reward = POMDPs.simulate(problem, RandomBabyPolicy(pol_rng), POMDPModels.BabyStateDistribution(0.0), rng=sim_rng, eps=.1)
