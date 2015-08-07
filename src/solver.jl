@@ -6,6 +6,7 @@ import Debug
 
 import Base.rand!
 import POMDPs.update_belief!
+import POMDPToolbox
 
 type POMCPPolicy <: POMDPs.Policy
     problem::POMDPs.POMDP
@@ -139,14 +140,8 @@ function init_N(problem::POMDPs.POMDP, h::ObsNode, action)
     return 0
 end
 
-# for use with a random rollout policy
-type EmptyBelief <: POMDPs.Belief
-end
-function update_belief!(b::EmptyBelief, p::POMDPs.POMDP, a, o)
-end
-
 function belief_from_node(problem::POMDPs.POMDP, node::ObsNode)
-    return EmptyBelief()
+    return POMDPToolbox.EmptyBelief()
 end
 
 
