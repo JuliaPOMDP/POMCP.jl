@@ -2,44 +2,9 @@
 # replace recursion with while loop
 # cache simulation results
 
-import Debug
-
-import Base.rand!
-import POMDPs.update_belief!
-import POMDPToolbox
-
-type POMCPPolicy <: POMDPs.Policy
-    problem::POMDPs.POMDP
-    solver::POMCPSolver
-    rng::AbstractRNG
-end
-
-# XXX Need to implement ==, hash
-type ParticleCollection <: POMDPs.Belief
-    particles::Array{Any,1}
-end
-ParticleCollection() = ParticleCollection({})
-function rand!(rng::AbstractRNG, sample, b::ParticleCollection)
-    return b.particles[ceil(rand(rng)*length(b.particles))]
-end
-
-type ActNode
-    label::Any # for keeping track of which action this corresponds to
-    N::Int64
-    V::Float64
-    children::Vector{Any} # should be Vector{ObsNode}, but there is a circular reference
-end
-
-type ObsNode
-    label::Any
-    N::Int64
-    B::POMDPs.AbstractDistribution
-    children::Vector{Any} # should be Vector{ActNode}, but there is a circular reference
-end
-
 # do all the computation necessary to pick the next action
 function action(policy::POMCPPolicy, belief::POMDPs.Belief)
-    return search(policy, belief, policy.solver.timeout)
+    return search(policy, belief, policy.solver.tree_queries)
 end
 
 # just return a properly constructed POMCP policy object
@@ -47,51 +12,77 @@ end
 function solve(solver::POMCPSolver, pomdp::POMDPs.POMDP)
     policy = POMCPPolicy(pomdp, solver, MersenneTwister(0))
     # XXX is this the right way to encourage precompilation?
-    println("running search once to force precompilation...")
-    search(policy, ParticleCollection({POMDPs.create_state(pomdp)}), 0.01)
-    println("done")
+    # println("running search once to force precompilation...")
+    # search(policy, POMCPBeliefWrapper(ParticleCollection({POMDPs.create_state(pomdp)})), 5.0)
+    # println("done")
     return policy
 end
 
+function search(pomcp::POMCPPolicy, belief::POMDPs.Belief, tree_queries)
+    if pomcp.solver.use_particle_filter
+        error("When using the pomcp particle filter, you must use a POMCPBeliefWrapper")
+    end
+    println("Creating new tree")
+    return search(pomcp, POMCPBeliefWrapper(belief), tree_queries)
+end
+
 # Search for the best next move
-function search(pomcp::POMCPPolicy, belief::POMDPs.Belief, timeout) 
-	finish_time = time() + timeout
+function search(pomcp::POMCPPolicy, belief::POMCPBeliefWrapper, tree_queries) 
 	# cache = SimulateCache{S}()
     s = POMDPs.create_state(pomcp.problem)
 
-    #XXX is root_belief right!!?
-    root_belief = ParticleCollection()
-    root = ObsNode(:root, 0, root_belief, {})
-	while time() < finish_time
+	# finish_time = time() + timeout
+	# while time() < finish_time
+    for i in 1:pomcp.solver.tree_queries
 		rand!(pomcp.rng, s, belief)
-		simulate(pomcp, root, deepcopy(s), 0) # cache)
+		simulate(pomcp, belief.tree, deepcopy(s), 0) # cache)
 	end
-    println("Search complete. Tree queried $(root.N) times")
-    best_ind = indmax([action.V for action in root.children])
-    return root.children[best_ind].label
+    println("Search complete. Tree queried $(belief.tree.N) times")
+
+    best_V = -Inf
+    best_node = nothing
+    for node in values(belief.tree.children)
+        if node.V > best_V
+            best_V = node.V
+            best_node = node
+        end
+    end
+    return best_node.label
 end
 
-function simulate(pomcp::POMCPPolicy, h::ObsNode, s, depth) # cache::SimulateCache)
+function simulate(pomcp::POMCPPolicy, h::BeliefNode, s, depth) # cache::SimulateCache)
 
     if POMDPs.discount(pomcp.problem)^depth < pomcp.solver.eps
         return 0
     end
-	if length(h.children) == 0
+	if isempty(h.children)
         action_space = POMDPs.actions(pomcp.problem)
-        # Debug.@bp
-		h.children = Array(Any, length(action_space))
-		for i in 1:length(h.children)
-			h.children[i] = ActNode(action_space[i],
-                                    init_N(pomcp.problem, h, action_space[i]),
-                                    init_V(pomcp.problem, h, action_space[i]),
-                                    {})
+		h.children = Dict{Any,ActNode}()
+		for a in action_space 
+			h.children[a] = ActNode(a,
+                                    init_N(pomcp.problem, h, a),
+                                    init_V(pomcp.problem, h, a),
+                                    h,
+                                    Dict())
 		end
 
 		return rollout(pomcp, s, h, depth)
 	end
 
-    best_ind = indmax([action.V + pomcp.solver.c*sqrt(log(h.N)/action.N) for action in h.children])
-    a = h.children[best_ind].label
+    best_criterion_val = -Inf
+    best_node = nothing
+    for node in values(h.children)
+        if node.N == 0 && h.N == 1
+            criterion_value = node.V
+        else 
+            criterion_value = node.V + pomcp.solver.c*sqrt(log(h.N)/node.N)
+        end
+        if criterion_value > best_criterion_val
+            best_criterion_val = criterion_value
+            best_node = node
+        end
+    end
+    a = best_node.label
 
     r = POMDPs.reward(pomcp.problem, s, a)
 
@@ -106,21 +97,33 @@ function simulate(pomcp::POMCPPolicy, h::ObsNode, s, depth) # cache::SimulateCac
     POMDPs.observation!(obs_dist, pomcp.problem, sp, a)
     rand!(pomcp.rng, o, obs_dist)
 
-    hao = ObsNode(o, 0, ParticleCollection(), {})
-    push!(h.children[best_ind].children, hao)
+    if haskey(best_node.children, o)
+        hao = best_node.children[o]
+    else
+        if pomcp.solver.use_particle_filter
+            hao = ObsNode(o, 0, ParticleCollection(), best_node, {})
+        else
+            new_belief = deepcopy(h.B)
+            update_belief!(new_belief, pomcp.problem, a, o)
+            hao = ObsNode(o, 0, new_belief, best_node, Dict{Any,ActNode}())
+        end
+        best_node.children[o]=hao
+    end
 
     R = r + POMDPs.discount(pomcp.problem)*simulate(pomcp, hao, sp, depth+1)
 
-    push!(h.B.particles, s)
+    if pomcp.solver.use_particle_filter
+        push!(h.B.particles, s)
+    end
     h.N += 1
 
-    h.children[best_ind].N += 1
-    h.children[best_ind].V += (R-h.children[best_ind].V)/h.children[best_ind].N
+    best_node.N += 1
+    best_node.V += (R-best_node.V)/best_node.N
 
     return R
 end
 
-function rollout(pomcp::POMCPPolicy, start_state, h::ObsNode, depth)
+function rollout(pomcp::POMCPPolicy, start_state, h::BeliefNode, depth)
     b = belief_from_node(pomcp.problem, h)
     r = POMDPs.simulate(pomcp.problem,
                         pomcp.solver.rollout_policy,
@@ -132,15 +135,15 @@ function rollout(pomcp::POMCPPolicy, start_state, h::ObsNode, depth)
     return POMDPs.discount(pomcp.problem)^depth * r
 end
 
-function init_V(problem::POMDPs.POMDP, h::ObsNode, action)
+function init_V(problem::POMDPs.POMDP, h::BeliefNode, action)
     return 0.0
 end
 
-function init_N(problem::POMDPs.POMDP, h::ObsNode, action)
+function init_N(problem::POMDPs.POMDP, h::BeliefNode, action)
     return 0
 end
 
-function belief_from_node(problem::POMDPs.POMDP, node::ObsNode)
+function belief_from_node(problem::POMDPs.POMDP, node::BeliefNode)
     return POMDPToolbox.EmptyBelief()
 end
 
