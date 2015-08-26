@@ -5,6 +5,7 @@ import POMDPs
 import POMDPToolbox.PreviousObservation
 
 import POMCP.belief_from_node
+import POMCP.init_V
 import POMDPs.action
 
 problem = POMDPModels.BabyPOMDP(-5, -10)
@@ -17,6 +18,8 @@ end
 action(p::RandomBabyPolicy, b::POMDPs.Belief) = POMDPModels.BabyAction(rand(p.rng)>0.5)
 =#
 
+# init_V(::POMDPModels.BabyPOMDP, node::POMCP.BeliefNode, a) = -30.0
+
 function belief_from_node(problem::POMDPModels.BabyPOMDP, node::POMCP.ObsNode)
     return PreviousObservation(node.label)
 end
@@ -24,13 +27,13 @@ end
 solver = POMCPSolver(POMDPModels.FeedWhenCrying(),
                      0.01,
                      10,
-                     500,
+                     20, 
                      rng,
                      false)
 
 policy = solve(solver, problem)
 
-N = 100
+N = 1000
 pomcp_rewards = Array(Float64, N)
 fwc_rewards = Array(Float64, N)
 
@@ -39,6 +42,7 @@ for i in 1:N
 
     pomcp_rewards[i] = POMDPs.simulate(problem,
                                        policy,
+                                       # POMDPModels.BabyStateDistribution(0.0),
                                        POMCPBeliefWrapper(POMDPModels.BabyStateDistribution(0.0)),
                                        rng=sim_rng,
                                        eps=.1,

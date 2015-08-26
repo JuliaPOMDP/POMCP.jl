@@ -2,7 +2,10 @@ type POMCPPolicy <: POMDPs.Policy
     problem::POMDPs.POMDP
     solver::POMCPSolver
     rng::AbstractRNG
+    #XXX hack
+    _tree_ref
 end
+POMCPPolicy(p,s,r) = POMCPPolicy(p,s,r,nothing)
 
 # XXX Need to implement ==, hash
 type ParticleCollection <: POMDPs.Belief

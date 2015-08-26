@@ -2,19 +2,20 @@
 # replace recursion with while loop
 # cache simulation results
 
+# using Debug
+
 # do all the computation necessary to pick the next action
 function action(policy::POMCPPolicy, belief::POMDPs.Belief)
+    #XXX hack
+    if policy._tree_ref == nothing && isa(belief, POMCPBeliefWrapper) 
+        policy._tree_ref = belief.tree
+    end
     return search(policy, belief, policy.solver.tree_queries)
 end
 
 # just return a properly constructed POMCP policy object
-# run the code once to ensure that it is properly compiled
 function solve(solver::POMCPSolver, pomdp::POMDPs.POMDP)
     policy = POMCPPolicy(pomdp, solver, MersenneTwister(0))
-    # XXX is this the right way to encourage precompilation?
-    # println("running search once to force precompilation...")
-    # search(policy, POMCPBeliefWrapper(ParticleCollection({POMDPs.create_state(pomdp)})), 5.0)
-    # println("done")
     return policy
 end
 
@@ -103,7 +104,7 @@ function simulate(pomcp::POMCPPolicy, h::BeliefNode, s, depth) # cache::Simulate
         if pomcp.solver.use_particle_filter
             hao = ObsNode(o, 0, ParticleCollection(), best_node, {})
         else
-            new_belief = deepcopy(h.B)
+            new_belief = deepcopy(h.B) # this often seems to trigger a gc, but I don't think that's avoidable
             update_belief!(new_belief, pomcp.problem, a, o)
             hao = ObsNode(o, 0, new_belief, best_node, Dict{Any,ActNode}())
         end
