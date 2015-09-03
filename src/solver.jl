@@ -38,12 +38,12 @@ function search(pomcp::POMCPPolicy, belief::POMCPBeliefWrapper, tree_queries)
 		rand!(pomcp.rng, s, belief)
 		simulate(pomcp, belief.tree, deepcopy(s), 0) # cache)
 	end
-    println("Search complete. Tree queried $(belief.tree.N) times")
+    # println("Search complete. Tree queried $(belief.tree.N) times")
 
     best_V = -Inf
     best_node = nothing
     for node in values(belief.tree.children)
-        if node.V > best_V
+        if node.V >= best_V
             best_V = node.V
             best_node = node
         end
@@ -78,7 +78,7 @@ function simulate(pomcp::POMCPPolicy, h::BeliefNode, s, depth) # cache::Simulate
         else 
             criterion_value = node.V + pomcp.solver.c*sqrt(log(h.N)/node.N)
         end
-        if criterion_value > best_criterion_val
+        if criterion_value >= best_criterion_val
             best_criterion_val = criterion_value
             best_node = node
         end
@@ -132,7 +132,7 @@ function rollout(pomcp::POMCPPolicy, start_state, h::BeliefNode, depth)
                         rng=pomcp.solver.rng,
                         eps=pomcp.solver.eps,
                         initial_state=start_state)
-    h.N += 1
+    h.N += 1 # this does not seem to be in the paper. Is it right?
     return POMDPs.discount(pomcp.problem)^depth * r
 end
 

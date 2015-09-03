@@ -1,4 +1,3 @@
-
 import POMDPModels
 using POMCP
 import POMDPs
@@ -9,7 +8,8 @@ import POMCP.init_V
 import POMDPs.action
 
 problem = POMDPModels.BabyPOMDP(-5, -10)
-rng = MersenneTwister(1)
+
+using Debug
 
 #=
 type RandomBabyPolicy <: POMDPs.Policy
@@ -24,46 +24,74 @@ function belief_from_node(problem::POMDPModels.BabyPOMDP, node::POMCP.ObsNode)
     return PreviousObservation(node.label)
 end
 
-solver = POMCPSolver(POMDPModels.FeedWhenCrying(),
-                     0.01,
-                     10,
-                     20, 
-                     rng,
-                     false)
+N = 5000
+eps = 0.01
 
-policy = solve(solver, problem)
+# rng = MersenneTwister(1)
+# 
+# solver = POMCPSolver(POMDPModels.FeedWhenCrying(),
+#                      0.01,
+#                      10,
+#                      1000, 
+#                      rng,
+#                      false)
+# 
+# policy = solve(solver, problem)
+#
+# @debug begin
+#     rng_seed = 2
+#     sim_rng = MersenneTwister(rng_seed)
+#     pomcp_result = POMDPs.simulate(problem,
+#                     policy,
+#                     POMCPBeliefWrapper(POMDPModels.BabyStateDistribution(0.0)),
+#                     rng=sim_rng,
+#                     eps=.1,
+#                     initial_state=POMDPModels.BabyState(false))
+#     
+#     sim_rng = MersenneTwister(rng_seed)
+#     fwc_result = POMDPs.simulate(problem,
+#                     POMDPModels.FeedWhenCrying(),
+#                     PreviousObservation(POMDPModels.BabyObservation(false)),
+#                     rng=sim_rng,
+#                     eps=.1,
+#                     initial_state=POMDPModels.BabyState(false))
+# end
 
-N = 1000
-pomcp_rewards = Array(Float64, N)
-fwc_rewards = Array(Float64, N)
-
-for i in 1:N
+@time pomcp_sum = @parallel (+) for i in 1:N
     sim_rng = MersenneTwister(i)
 
-    pomcp_rewards[i] = POMDPs.simulate(problem,
-                                       policy,
-                                       # POMDPModels.BabyStateDistribution(0.0),
-                                       POMCPBeliefWrapper(POMDPModels.BabyStateDistribution(0.0)),
-                                       rng=sim_rng,
-                                       eps=.1,
-                                       initial_state=POMDPModels.BabyState(false))
+    rng = MersenneTwister(i+1000)
 
-    #=
-    sim_rng = MersenneTwister(1)
-    pol_rng = MersenneTwister(2)
+    solver = POMCPSolver(POMDPModels.FeedWhenCrying(),
+                         0.01,
+                         10,
+                         500, 
+                         rng,
+                         false)
 
-    @show random_reward = POMDPs.simulate(problem, RandomBabyPolicy(pol_rng), POMDPModels.BabyStateDistribution(0.0), rng=sim_rng, eps=.1)
-    =#
+    policy = solve(solver, problem)
 
-    sim_rng = MersenneTwister(i)
 
-    fwc_rewards[i] = POMDPs.simulate(problem,
-                                     POMDPModels.FeedWhenCrying(),
-                                     PreviousObservation(POMDPModels.BabyObservation(false)),
-                                     rng=sim_rng,
-                                     eps=.1,
-                                     initial_state=POMDPModels.BabyState(false))
+    POMDPs.simulate(problem,
+                    policy,
+                    # POMDPModels.BabyStateDistribution(0.0),
+                    POMCPBeliefWrapper(POMDPModels.BabyStateDistribution(0.0)),
+                    rng=sim_rng,
+                    eps=eps,
+                    initial_state=POMDPModels.BabyState(false))
+
 end
 
-@show pomcp_avg = mean(pomcp_rewards)
-@show fwc_rewards = mean(fwc_rewards)
+fwc_sum = @parallel (+) for i in 1:N
+    sim_rng = MersenneTwister(i)
+
+    POMDPs.simulate(problem,
+                    POMDPModels.FeedWhenCrying(),
+                    PreviousObservation(POMDPModels.BabyObservation(false)),
+                    rng=sim_rng,
+                    eps=eps,
+                    initial_state=POMDPModels.BabyState(false))
+end
+
+@show pomcp_avg = pomcp_sum/N 
+@show fwc_rewards = fwc_sum/N
