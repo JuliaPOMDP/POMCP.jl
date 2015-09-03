@@ -125,7 +125,7 @@ function simulate(pomcp::POMCPPolicy, h::BeliefNode, s, depth) # cache::Simulate
 end
 
 function rollout(pomcp::POMCPPolicy, start_state, h::BeliefNode, depth)
-    b = belief_from_node(pomcp.problem, h)
+    b = belief_from_node(pomcp, h)
     r = POMDPs.simulate(pomcp.problem,
                         pomcp.solver.rollout_policy,
                         b,
@@ -144,7 +144,7 @@ function init_N(problem::POMDPs.POMDP, h::BeliefNode, action)
     return 0
 end
 
-function belief_from_node(problem::POMDPs.POMDP, node::BeliefNode)
+function belief_from_node(policy::POMCPPolicy, node::BeliefNode)
     return POMDPToolbox.EmptyBelief()
 end
 
