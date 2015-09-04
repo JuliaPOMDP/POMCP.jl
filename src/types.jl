@@ -1,11 +1,10 @@
 type POMCPPolicy <: POMDPs.Policy
     problem::POMDPs.POMDP
     solver::POMCPSolver
-    rng::AbstractRNG
     #XXX hack
     _tree_ref
 end
-POMCPPolicy(p,s,r) = POMCPPolicy(p,s,r,nothing)
+POMCPPolicy(p,s) = POMCPPolicy(p,s,nothing)
 
 # XXX Need to implement ==, hash
 type ParticleCollection <: POMDPs.Belief
@@ -38,4 +37,26 @@ type RootNode <: BeliefNode
     N::Int64
     B::POMDPs.AbstractDistribution
     children::Dict{Any,ActNode}
+end
+
+type FullBeliefConverter <: NodeBeliefConverter
+end
+function belief_from_node(converter::FullBeliefConverter, node::BeliefNode)
+    return node.B
+end
+
+type EmptyConverter <: NodeBeliefConverter
+end
+function belief_from_node(converter::EmptyConverter, node::BeliefNode)
+    return POMDPToolbox.EmptyBelief()
+end
+
+# returns the previous observation except at the root node, where it returns a copy of the belief
+type PreviousObservationConverter <: NodeBeliefConverter
+end
+function belief_from_node(converter::PreviousObservationConverter, node::POMCP.ObsNode)
+    return POMDPToolbox.PreviousObservation(node.label)
+end
+function belief_from_node(converter::PreviousObservationConverter, node::POMCP.RootNode)
+    return deepcopy(node.B)
 end

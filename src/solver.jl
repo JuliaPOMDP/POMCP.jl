@@ -15,7 +15,7 @@ end
 
 # just return a properly constructed POMCP policy object
 function solve(solver::POMCPSolver, pomdp::POMDPs.POMDP)
-    policy = POMCPPolicy(pomdp, solver, MersenneTwister(0))
+    policy = POMCPPolicy(pomdp, solver)
     return policy
 end
 
@@ -35,7 +35,7 @@ function search(pomcp::POMCPPolicy, belief::POMCPBeliefWrapper, tree_queries)
 	# finish_time = time() + timeout
 	# while time() < finish_time
     for i in 1:pomcp.solver.tree_queries
-		rand!(pomcp.rng, s, belief)
+		rand!(pomcp.solver.rng, s, belief)
 		simulate(pomcp, belief.tree, deepcopy(s), 0) # cache)
 	end
     # println("Search complete. Tree queried $(belief.tree.N) times")
@@ -93,10 +93,10 @@ function simulate(pomcp::POMCPPolicy, h::BeliefNode, s, depth) # cache::Simulate
     o = POMDPs.create_observation(pomcp.problem)
 
     POMDPs.transition!(trans_dist, pomcp.problem, s, a)
-    rand!(pomcp.rng, sp, trans_dist)
+    rand!(pomcp.solver.rng, sp, trans_dist)
 
     POMDPs.observation!(obs_dist, pomcp.problem, sp, a)
-    rand!(pomcp.rng, o, obs_dist)
+    rand!(pomcp.solver.rng, o, obs_dist)
 
     if haskey(best_node.children, o)
         hao = best_node.children[o]
@@ -125,7 +125,7 @@ function simulate(pomcp::POMCPPolicy, h::BeliefNode, s, depth) # cache::Simulate
 end
 
 function rollout(pomcp::POMCPPolicy, start_state, h::BeliefNode, depth)
-    b = belief_from_node(pomcp, h)
+    b = belief_from_node(pomcp.solver.node_converter, h)
     r = POMDPs.simulate(pomcp.problem,
                         pomcp.solver.rollout_policy,
                         b,
@@ -144,8 +144,6 @@ function init_N(problem::POMDPs.POMDP, h::BeliefNode, action)
     return 0
 end
 
-function belief_from_node(policy::POMCPPolicy, node::BeliefNode)
-    return POMDPToolbox.EmptyBelief()
+function belief_from_node(converter::NodeBeliefConverter, node::BeliefNode)
+    error("$(typeof(converter)) does not implement belief_from_node")
 end
-
-
