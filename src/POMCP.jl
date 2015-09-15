@@ -5,7 +5,7 @@ import POMDPs
 import POMDPs.action
 import POMDPs.solve
 import Base.rand!
-import POMDPs.update_belief!
+import POMDPs.belief
 import POMDPToolbox
 
 
@@ -39,18 +39,19 @@ include("types.jl")
 type POMCPBeliefWrapper <: POMDPs.Belief
     tree::BeliefNode
 end
+POMCPBeliefWrapper() = POMCPBeliefWrapper(RootNode(0, POMDPToolbox.EmptyBelief(), Dict{Any,ActNode}()))
 function POMCPBeliefWrapper(b::POMDPs.Belief)
     return POMCPBeliefWrapper(RootNode(0, deepcopy(b), Dict{Any,ActNode}()))
 end
-function update_belief!(b::POMCPBeliefWrapper, pomdp::POMDPs.POMDP, a, o)
-    if haskey(b.tree.children[a].children, o)
-        b.tree = b.tree.children[a].children[o]
+function belief(pomdp::POMDPs.POMDP, b_old::POMCPBeliefWrapper, a, o, b::POMCPBeliefWrapper=POMCPBeliefWrapper())
+    if haskey(b_old.tree.children[a].children, o)
+        b.tree = b_old.tree.children[a].children[o]
     else
         # TODO this will fail for the particle filter... then what?
-        new_belief = deepcopy(b.tree.B)
-        update_belief!(new_belief, pomdp, a, o)
-        b.tree = ObsNode(o, 0, new_belief, b.tree.children[a], Dict{Any,ActNode}())
+        new_belief = belief(pomdp, b_old.tree.B, a, o)
+        b.tree = ObsNode(o, 0, new_belief, b_old.tree.children[a], Dict{Any,ActNode}())
     end
+    return b
 end
 function rand!(rng::AbstractRNG, s, d::POMCPBeliefWrapper)
     rand!(rng, s, d.tree.B)

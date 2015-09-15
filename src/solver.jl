@@ -5,11 +5,12 @@
 # using Debug
 
 # do all the computation necessary to pick the next action
-function action(policy::POMCPPolicy, belief::POMDPs.Belief)
+function action(::POMDPs.POMDP, policy::POMCPPolicy, belief::POMDPs.Belief, a=nothing)
     #XXX hack
     if policy._tree_ref == nothing && isa(belief, POMCPBeliefWrapper) 
         policy._tree_ref = belief.tree
     end
+    # end hack
     return search(policy, belief, policy.solver.tree_queries)
 end
 
@@ -87,15 +88,13 @@ function simulate(pomcp::POMCPPolicy, h::BeliefNode, s, depth) # cache::Simulate
 
     r = POMDPs.reward(pomcp.problem, s, a)
 
-    obs_dist = POMDPs.create_observation_distribution(pomcp.problem)
-    trans_dist = POMDPs.create_transition_distribution(pomcp.problem)
     sp = POMDPs.create_state(pomcp.problem)
     o = POMDPs.create_observation(pomcp.problem)
 
-    POMDPs.transition!(trans_dist, pomcp.problem, s, a)
+    trans_dist = POMDPs.transition(pomcp.problem, s, a)
     rand!(pomcp.solver.rng, sp, trans_dist)
 
-    POMDPs.observation!(obs_dist, pomcp.problem, sp, a)
+    obs_dist = POMDPs.observation(pomcp.problem, sp, a)
     rand!(pomcp.solver.rng, o, obs_dist)
 
     if haskey(best_node.children, o)
@@ -104,8 +103,7 @@ function simulate(pomcp::POMCPPolicy, h::BeliefNode, s, depth) # cache::Simulate
         if pomcp.solver.use_particle_filter
             hao = ObsNode(o, 0, ParticleCollection(), best_node, {})
         else
-            new_belief = deepcopy(h.B) # this often seems to trigger a gc, but I don't think that's avoidable
-            update_belief!(new_belief, pomcp.problem, a, o)
+            new_belief = belief(pomcp.problem, h.B, a, o)
             hao = ObsNode(o, 0, new_belief, best_node, Dict{Any,ActNode}())
         end
         best_node.children[o]=hao
