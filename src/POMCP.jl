@@ -2,8 +2,7 @@ module POMCP
 
 import POMDPs
 
-import POMDPs.action
-import POMDPs.solve
+import POMDPs: action, solve, create_policy
 import Base.rand!
 import POMDPs.belief
 import POMDPToolbox
@@ -16,6 +15,7 @@ export
     action,
     to_json_file,
     NodeBeliefConverter,
+    FullBeliefConverter,
     EmptyConverter,
     PreviousObservationConverter
 
@@ -31,6 +31,7 @@ type POMCPSolver <: POMDPs.Solver
     rng::AbstractRNG
     use_particle_filter::Bool # this should probably actually be a belief wrapper property
     node_converter::NodeBeliefConverter
+    num_sparse_actions::Int # = 0 or less if not used
 end
 # TODO: make a constructor that will asign sensible defaults
 
@@ -55,6 +56,19 @@ function belief(pomdp::POMDPs.POMDP, b_old::POMCPBeliefWrapper, a, o, b::POMCPBe
 end
 function rand!(rng::AbstractRNG, s, d::POMCPBeliefWrapper)
     rand!(rng, s, d.tree.B)
+end
+
+# override this if you want to choose specific actions (you can override based on the POMDP type at the node level, or the belief type)
+function sparse_actions(pomdp::POMDPs.POMDP, s, h::BeliefNode, num_actions::Int)
+    return sparse_actions(pomdp, s, h.B, num_actions)
+end
+function sparse_actions(pomdp::POMDPs.POMDP, s, b::POMDPs.Belief, num_actions::Int)
+    as = POMDPs.actions(pomdp, s)
+    if num_actions > 0
+        return as[1:min(length(as),num_actions)]
+    else
+        return as
+    end
 end
 
 include("solver.jl")

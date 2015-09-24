@@ -4,6 +4,8 @@
 
 # using Debug
 
+create_policy(::POMCPSolver, ::POMDPs.POMDP) = POMCPPolicy()
+
 # do all the computation necessary to pick the next action
 function action(::POMDPs.POMDP, policy::POMCPPolicy, belief::POMDPs.Belief, a=nothing)
     #XXX hack
@@ -24,7 +26,8 @@ function search(pomcp::POMCPPolicy, belief::POMDPs.Belief, tree_queries)
     if pomcp.solver.use_particle_filter
         error("When using the pomcp particle filter, you must use a POMCPBeliefWrapper")
     end
-    println("Creating new tree")
+    # XXX
+    # println("Creating new tree") # TODO: Document this behavior
     return search(pomcp, POMCPBeliefWrapper(belief), tree_queries)
 end
 
@@ -42,7 +45,7 @@ function search(pomcp::POMCPPolicy, belief::POMCPBeliefWrapper, tree_queries)
     # println("Search complete. Tree queried $(belief.tree.N) times")
 
     best_V = -Inf
-    best_node = nothing
+    best_node = ActNode() # for type stability
     for node in values(belief.tree.children)
         if node.V >= best_V
             best_V = node.V
@@ -54,11 +57,11 @@ end
 
 function simulate(pomcp::POMCPPolicy, h::BeliefNode, s, depth) # cache::SimulateCache)
 
-    if POMDPs.discount(pomcp.problem)^depth < pomcp.solver.eps
+    if POMDPs.discount(pomcp.problem)^depth < pomcp.solver.eps || POMDPs.isterminal(pomcp.problem, s)
         return 0
     end
 	if isempty(h.children)
-        action_space = POMDPs.actions(pomcp.problem)
+        action_space = sparse_actions(pomcp.problem, s, h, pomcp.solver.num_sparse_actions)
 		h.children = Dict{Any,ActNode}()
 		for a in action_space 
 			h.children[a] = ActNode(a,
@@ -124,12 +127,13 @@ end
 
 function rollout(pomcp::POMCPPolicy, start_state, h::BeliefNode, depth)
     b = belief_from_node(pomcp.solver.node_converter, h)
-    r = POMDPs.simulate(pomcp.problem,
-                        pomcp.solver.rollout_policy,
-                        b,
-                        rng=pomcp.solver.rng,
-                        eps=pomcp.solver.eps,
-                        initial_state=start_state)
+    sim = POMDPToolbox.RolloutSimulator(rng=pomcp.solver.rng,
+                                        eps=pomcp.solver.eps,
+                                        initial_state=start_state,
+                                        initial_belief=b)
+    r = POMDPs.simulate(sim,
+                        pomcp.problem,
+                        pomcp.solver.rollout_policy)
     h.N += 1 # this does not seem to be in the paper. Is it right?
     return POMDPs.discount(pomcp.problem)^depth * r
 end

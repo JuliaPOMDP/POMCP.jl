@@ -3,8 +3,9 @@ type POMCPPolicy <: POMDPs.Policy
     solver::POMCPSolver
     #XXX hack
     _tree_ref
+    POMCPPolicy() = new()
+    POMCPPolicy(p,s) = new(p,s,nothing)
 end
-POMCPPolicy(p,s) = POMCPPolicy(p,s,nothing)
 
 # XXX Need to implement ==, hash
 type ParticleCollection <: POMDPs.Belief
@@ -23,6 +24,8 @@ type ActNode
     V::Float64
     parent::BeliefNode
     children::Dict{Any,Any} # maps observations to ObsNodes
+    ActNode() = new()
+    ActNode(l,N::Int64,V::Float64,p::BeliefNode,c::Dict{Any,Any}) = new(l,N,V,p,c)
 end
 
 type ObsNode <: BeliefNode
