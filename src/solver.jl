@@ -40,7 +40,8 @@ function search(pomcp::POMCPPolicy, belief::POMCPBeliefWrapper, tree_queries)
 	# while time() < finish_time
     for i in 1:pomcp.solver.tree_queries
 		rand!(pomcp.solver.rng, s, belief)
-		simulate(pomcp, belief.tree, deepcopy(s), 0) # cache)
+		# simulate(pomcp, belief.tree, deepcopy(s), 0) # cache)
+		simulate(pomcp, belief.tree, s, 0) # why was the deepcopy above?
 	end
     # println("Search complete. Tree queried $(belief.tree.N) times")
 
