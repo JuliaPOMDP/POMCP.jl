@@ -45,7 +45,11 @@ end
 type FullBeliefConverter <: NodeBeliefConverter
 end
 function belief_from_node(converter::FullBeliefConverter, node::BeliefNode)
-    return node.B
+    b = node.B
+    if isa(b, POMCPBeliefWrapper)
+        b = b.tree.B
+    end
+    return b
 end
 
 type EmptyConverter <: NodeBeliefConverter

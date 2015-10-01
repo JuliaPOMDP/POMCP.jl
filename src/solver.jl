@@ -107,7 +107,7 @@ function simulate(pomcp::POMCPPolicy, h::BeliefNode, s, depth) # cache::Simulate
         if pomcp.solver.use_particle_filter
             hao = ObsNode(o, 0, ParticleCollection(), best_node, {})
         else
-            new_belief = belief(pomcp.problem, h.B, a, o)
+            new_belief = belief(pomcp.problem, h.B, a, o) # this relies on h.B not being modified
             hao = ObsNode(o, 0, new_belief, best_node, Dict{Any,ActNode}())
         end
         best_node.children[o]=hao

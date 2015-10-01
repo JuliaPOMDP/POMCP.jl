@@ -32,8 +32,8 @@ end
 
 function Base.writemime(f::IO, ::MIME"text/html", tree::BeliefNode)
     json = JSON.json(to_dict(tree))
-    css = readall("../src/tree_vis.css")
-    js = readall("../src/tree_vis.js")
+    css = readall(joinpath(dirname(@__FILE__()), "tree_vis.css"))
+    js = readall(joinpath(dirname(@__FILE__()), "tree_vis.js"))
 
     html_string = """
         <div id="pomcp">
