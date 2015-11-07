@@ -7,9 +7,9 @@
 create_policy(::POMCPSolver, ::POMDPs.POMDP) = POMCPPolicy()
 
 # do all the computation necessary to pick the next action
-function action(::POMDPs.POMDP, policy::POMCPPolicy, belief::POMDPs.Belief, a=nothing)
+function action(policy::POMCPPolicy, belief::POMDPs.Belief, a=nothing)
     #XXX hack
-    if policy._tree_ref == nothing && isa(belief, POMCPBeliefWrapper) 
+    if policy._tree_ref == nothing && isa(belief, POMCPPolicyState) 
         policy._tree_ref = belief.tree
     end
     # end hack
@@ -23,16 +23,16 @@ function solve(solver::POMCPSolver, pomdp::POMDPs.POMDP)
 end
 
 function search(pomcp::POMCPPolicy, belief::POMDPs.Belief, tree_queries)
-    if pomcp.solver.use_particle_filter
-        error("When using the pomcp particle filter, you must use a POMCPBeliefWrapper")
+    if isa(pomcp.solver.updater, ParticleCollectionUpdater)
+        error("code should never get here... something's wrong")
+        # error("When using the pomcp particle filter, you must use a POMCPBeliefWrapper")
     end
-    # XXX
     # println("Creating new tree") # TODO: Document this behavior
-    return search(pomcp, POMCPBeliefWrapper(belief), tree_queries)
+    return search(pomcp, POMCPPolicyState(belief), tree_queries)
 end
 
 # Search for the best next move
-function search(pomcp::POMCPPolicy, belief::POMCPBeliefWrapper, tree_queries) 
+function search(pomcp::POMCPPolicy, belief::POMCPPolicyState, tree_queries) 
 	# cache = SimulateCache{S}()
     s = POMDPs.create_state(pomcp.problem)
 
@@ -89,7 +89,6 @@ function simulate(pomcp::POMCPPolicy, h::BeliefNode, s, depth) # cache::Simulate
         end
     end
     a = best_node.label
-
     r = POMDPs.reward(pomcp.problem, s, a)
 
     sp = POMDPs.create_state(pomcp.problem)
@@ -98,24 +97,24 @@ function simulate(pomcp::POMCPPolicy, h::BeliefNode, s, depth) # cache::Simulate
     trans_dist = POMDPs.transition(pomcp.problem, s, a)
     rand!(pomcp.solver.rng, sp, trans_dist)
 
-    obs_dist = POMDPs.observation(pomcp.problem, sp, a)
+    obs_dist = POMDPs.observation(pomcp.problem, s, a, sp)
     rand!(pomcp.solver.rng, o, obs_dist)
 
     if haskey(best_node.children, o)
         hao = best_node.children[o]
     else
-        if pomcp.solver.use_particle_filter
-            hao = ObsNode(o, 0, ParticleCollection(), best_node, {})
+        if isa(pomcp.solver.updater, ParticleCollectionUpdater)
+            hao = ObsNode(o, 0, ParticleCollection(), best_node, Dict{POMDPs.Action,ActNode}())
         else
-            new_belief = belief(pomcp.problem, h.B, a, o) # this relies on h.B not being modified
-            hao = ObsNode(o, 0, new_belief, best_node, Dict{Any,ActNode}())
+            new_belief = update(pomcp.solver.updater, h.B, a, o) # this relies on h.B not being modified
+            hao = ObsNode(o, 0, new_belief, best_node, Dict{POMDPs.Action,ActNode}())
         end
         best_node.children[o]=hao
     end
 
     R = r + POMDPs.discount(pomcp.problem)*simulate(pomcp, hao, sp, depth+1)
 
-    if pomcp.solver.use_particle_filter
+    if isa(pomcp.solver.updater, ParticleCollectionUpdater)
         push!(h.B.particles, s)
     end
     h.N += 1
@@ -127,26 +126,27 @@ function simulate(pomcp::POMCPPolicy, h::BeliefNode, s, depth) # cache::Simulate
 end
 
 function rollout(pomcp::POMCPPolicy, start_state, h::BeliefNode, depth)
-    b = belief_from_node(pomcp.solver.node_converter, h)
+    b = convert_belief(pomcp.solver.rollout_updater, h)
     sim = POMDPToolbox.RolloutSimulator(rng=pomcp.solver.rng,
                                         eps=pomcp.solver.eps,
-                                        initial_state=start_state,
-                                        initial_belief=b)
+                                        initial_state=start_state)
     r = POMDPs.simulate(sim,
                         pomcp.problem,
-                        pomcp.solver.rollout_policy)
+                        pomcp.solver.rollout_policy,
+                        pomcp.solver.rollout_updater,
+                        b)
     h.N += 1 # this does not seem to be in the paper. Is it right?
     return POMDPs.discount(pomcp.problem)^depth * r
 end
 
+# TODO: Document
+# TODO: Not sure if the arguments for this are right
 function init_V(problem::POMDPs.POMDP, h::BeliefNode, action)
     return 0.0
 end
 
+# TODO: Document
+# TODO: Not sure if the arguments for this are exactly what's needed
 function init_N(problem::POMDPs.POMDP, h::BeliefNode, action)
     return 0
-end
-
-function belief_from_node(converter::NodeBeliefConverter, node::BeliefNode)
-    error("$(typeof(converter)) does not implement belief_from_node")
 end

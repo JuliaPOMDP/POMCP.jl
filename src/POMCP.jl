@@ -4,7 +4,7 @@ import POMDPs
 
 import POMDPs: action, solve, create_policy
 import Base.rand!
-import POMDPs.belief
+import POMDPs: update, convert_belief, updater, create_belief
 import POMDPToolbox
 
 
@@ -17,11 +17,11 @@ export
     NodeBeliefConverter,
     FullBeliefConverter,
     EmptyConverter,
-    PreviousObservationConverter
+    PreviousObservationConverter,
+    init_V,
+    init_N
 
 #TODO are these the things I should export?
-
-abstract NodeBeliefConverter
 
 type POMCPSolver <: POMDPs.Solver
     rollout_policy::POMDPs.Policy
@@ -29,40 +29,54 @@ type POMCPSolver <: POMDPs.Solver
     c::Float64
     tree_queries::Int
     rng::AbstractRNG
-    use_particle_filter::Bool # this should probably actually be a belief wrapper property
-    node_converter::NodeBeliefConverter
+    updater::POMDPs.BeliefUpdater
+    rollout_updater::POMDPs.BeliefUpdater
     num_sparse_actions::Int # = 0 or less if not used
 end
-# TODO: make a constructor that will asign sensible defaults
 
 include("types.jl")
+include("constructor.jl")
 
-type POMCPBeliefWrapper <: POMDPs.Belief
+type POMCPPolicyState <: POMDPs.Belief
     tree::BeliefNode
 end
-POMCPBeliefWrapper() = POMCPBeliefWrapper(RootNode(0, POMDPToolbox.EmptyBelief(), Dict{Any,ActNode}()))
-function POMCPBeliefWrapper(b::POMDPs.Belief)
-    return POMCPBeliefWrapper(RootNode(0, deepcopy(b), Dict{Any,ActNode}()))
+POMCPPolicyState() = POMCPPolicyState(RootNode(0, POMDPToolbox.EmptyBelief(), Dict{Any,ActNode}()))
+function POMCPPolicyState(b::POMDPs.Belief)
+    return POMCPPolicyState(RootNode(0, deepcopy(b), Dict{Any,ActNode}()))
 end
-function belief(pomdp::POMDPs.POMDP, b_old::POMCPBeliefWrapper, a, o, b::POMCPBeliefWrapper=POMCPBeliefWrapper())
+type POMCPUpdater <: POMDPs.BeliefUpdater
+    updater
+end
+updater(policy::POMCPPolicy) = POMCPUpdater(policy.solver.updater)
+create_belief(updater::POMCPUpdater) = POMCPPolicyState()
+convert_belief(::POMCPUpdater, b::POMDPs.Belief) = POMCPPolicyState(b)
+convert_belief(::POMCPUpdater, b::POMCPPolicyState) = b
+
+function update(updater::POMCPUpdater, b_old::POMCPPolicyState, a::POMDPs.Action, o::POMDPs.Observation, b::POMCPPolicyState=POMCPPolicyState())
     if haskey(b_old.tree.children[a].children, o)
         b.tree = b_old.tree.children[a].children[o]
     else
         # TODO this will fail for the particle filter... then what?
-        new_belief = belief(pomdp, b_old.tree.B, a, o)
+        new_belief = update(updater.updater, b_old.tree.B, a, o)
         b.tree = ObsNode(o, 0, new_belief, b_old.tree.children[a], Dict{Any,ActNode}())
     end
     return b
 end
-function rand!(rng::AbstractRNG, s, d::POMCPBeliefWrapper)
+function rand!(rng::AbstractRNG, s::POMDPs.State, d::POMCPPolicyState)
     rand!(rng, s, d.tree.B)
 end
 
+# override this to determine how the belief for the rollout policy will look
+convert_belief(updater::POMDPs.BeliefUpdater, node::BeliefNode) = convert_belief(updater, node.B)
+# some defaults are provided
+convert_belief(::POMDPToolbox.PreviousObservationUpdater, node::ObsNode) = POMDPToolbox.PreviousObservation(node.label)
+convert_belief(::POMDPToolbox.EmptyUpdater, node::BeliefNode) = POMDPToolbox.EmptyBelief()
+
 # override this if you want to choose specific actions (you can override based on the POMDP type at the node level, or the belief type)
-function sparse_actions(pomdp::POMDPs.POMDP, s, h::BeliefNode, num_actions::Int)
+function sparse_actions(pomdp::POMDPs.POMDP, s::POMDPs.State, h::BeliefNode, num_actions::Int)
     return sparse_actions(pomdp, s, h.B, num_actions)
 end
-function sparse_actions(pomdp::POMDPs.POMDP, s, b::POMDPs.Belief, num_actions::Int)
+function sparse_actions(pomdp::POMDPs.POMDP, s::POMDPs.State, b::POMDPs.Belief, num_actions::Int)
     as = POMDPs.actions(pomdp, s)
     if num_actions > 0
         return as[1:min(length(as),num_actions)]
