@@ -16,7 +16,7 @@ function rand!(rng::AbstractRNG, sample, b::ParticleCollection)
     return b.particles[ceil(rand(rng)*length(b.particles))]
 end
 
-type ParticleCollectionUpdater
+type ParticleCollectionUpdater <: POMDPs.BeliefUpdater
 end
 
 abstract BeliefNode

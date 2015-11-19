@@ -10,14 +10,10 @@ import POMDPToolbox
 
 export
     POMCPSolver,
-    POMCPBeliefWrapper,
+    POMCPPolicyState,
     solve,
     action,
     to_json_file,
-    NodeBeliefConverter,
-    FullBeliefConverter,
-    EmptyConverter,
-    PreviousObservationConverter,
     init_V,
     init_N
 
@@ -67,7 +63,7 @@ function rand!(rng::AbstractRNG, s::POMDPs.State, d::POMCPPolicyState)
 end
 
 # override this to determine how the belief for the rollout policy will look
-convert_belief(updater::POMDPs.BeliefUpdater, node::BeliefNode) = convert_belief(updater, node.B)
+convert_belief(rollout_updater::POMDPs.BeliefUpdater, node::BeliefNode) = convert_belief(rollout_updater, node.B)
 # some defaults are provided
 convert_belief(::POMDPToolbox.PreviousObservationUpdater, node::ObsNode) = POMDPToolbox.PreviousObservation(node.label)
 convert_belief(::POMDPToolbox.EmptyUpdater, node::BeliefNode) = POMDPToolbox.EmptyBelief()
