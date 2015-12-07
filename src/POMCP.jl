@@ -45,7 +45,7 @@ type POMCPUpdater <: POMDPs.BeliefUpdater
 end
 updater(policy::POMCPPolicy) = POMCPUpdater(policy.solver.updater)
 create_belief(updater::POMCPUpdater) = POMCPPolicyState()
-convert_belief(::POMCPUpdater, b::POMDPs.Belief) = POMCPPolicyState(b)
+convert_belief(up::POMCPUpdater, b::POMDPs.Belief) = POMCPPolicyState(b)
 convert_belief(::POMCPUpdater, b::POMCPPolicyState) = b
 
 function update(updater::POMCPUpdater, b_old::POMCPPolicyState, a::POMDPs.Action, o::POMDPs.Observation, b::POMCPPolicyState=POMCPPolicyState())

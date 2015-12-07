@@ -13,7 +13,8 @@ type ParticleCollection <: POMDPs.Belief
 end
 ParticleCollection() = ParticleCollection(POMDPs.State[])
 function rand!(rng::AbstractRNG, sample, b::ParticleCollection)
-    return b.particles[ceil(rand(rng)*length(b.particles))]
+    # return b.particles[ceil(rand(rng)*length(b.particles))]
+    return b.particles[rand(rng, 1:length(b.particles))]
 end
 
 type ParticleCollectionUpdater <: POMDPs.BeliefUpdater

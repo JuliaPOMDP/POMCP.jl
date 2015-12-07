@@ -24,7 +24,7 @@ end
 
 function search(pomcp::POMCPPolicy, belief::POMDPs.Belief, tree_queries)
     if isa(pomcp.solver.updater, ParticleCollectionUpdater)
-        error("code should never get here... something's wrong")
+        error("execution should never get here... something's wrong")
         # error("When using the pomcp particle filter, you must use a POMCPBeliefWrapper")
     end
     # println("Creating new tree") # TODO: Document this behavior
@@ -114,7 +114,8 @@ function simulate(pomcp::POMCPPolicy, h::BeliefNode, s, depth) # cache::Simulate
 
     R = r + POMDPs.discount(pomcp.problem)*simulate(pomcp, hao, sp, depth+1)
 
-    if isa(pomcp.solver.updater, ParticleCollectionUpdater)
+    # if isa(pomcp.solver.updater, ParticleCollectionUpdater) && !isa(h, RootNode)
+    if isa(h.B, ParticleCollection)
         push!(h.B.particles, s)
     end
     h.N += 1

@@ -16,7 +16,7 @@ Pkg.clone("https://github.com/sisl/POMCP.jl.git")
 
 This implementation of the POMCP solver may be used to solve POMDPs defined according to the [POMDPs.jl](https://github.com/sisl/POMDPs.jl) interface. Note that this is an online solver, so the computation is carried out as the simulation is running (simulations take a long time, but `solve` takes no time).
 
-For a (mostly undocumented for now, but hopefully clear enough) usage example, see the [Sanity Checks](https://github.com/sisl/POMCP.jl/blob/master/notebooks/Sanity%20Checks.ipynb) notebook.
+For a (mostly undocumented for now, but hopefully clear enough) usage example, see the [Basic Usage](https://github.com/sisl/POMCP.jl/blob/master/notebooks/Basic%20Usage.ipynb) notebook.
 
 Behavior is controlled through two mechanisms: solver options and method specializations
 
@@ -33,7 +33,7 @@ For clarity, a keyword constructor is defined with the following arguments:
 - `rollout_updater` - The belief updater that will be used in the rollout simulations.
 - `num_sparse_actions` - If only a limited number of actions are to be considered, set this. If it is 0, all actions will be considered.
 
-### Methods that can be Overridden
+### Methods for Specialization
 
 The following methods can be overridden to change the behavior of the solver:
 
