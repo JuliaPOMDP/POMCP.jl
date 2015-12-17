@@ -62,7 +62,7 @@ function simulate(pomcp::POMCPPolicy, h::BeliefNode, s, depth) # cache::Simulate
         return 0
     end
 	if isempty(h.children)
-        action_space = sparse_actions(pomcp.problem, s, h, pomcp.solver.num_sparse_actions)
+        action_space = sparse_actions(pomcp, pomcp.problem, h, pomcp.solver.num_sparse_actions)
 		h.children = Dict{Any,ActNode}()
 		for a in action_space 
 			h.children[a] = ActNode(a,
@@ -89,13 +89,14 @@ function simulate(pomcp::POMCPPolicy, h::BeliefNode, s, depth) # cache::Simulate
         end
     end
     a = best_node.label
-    r = POMDPs.reward(pomcp.problem, s, a)
 
     sp = POMDPs.create_state(pomcp.problem)
     o = POMDPs.create_observation(pomcp.problem)
 
     trans_dist = POMDPs.transition(pomcp.problem, s, a)
     rand!(pomcp.solver.rng, sp, trans_dist)
+
+    r = POMDPs.reward(pomcp.problem, s, a, sp)
 
     obs_dist = POMDPs.observation(pomcp.problem, s, a, sp)
     rand!(pomcp.solver.rng, o, obs_dist)

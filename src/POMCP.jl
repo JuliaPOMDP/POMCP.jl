@@ -15,7 +15,8 @@ export
     action,
     to_json_file,
     init_V,
-    init_N
+    init_N,
+    sparse_actions
 
 #TODO are these the things I should export?
 
@@ -69,15 +70,22 @@ convert_belief(::POMDPToolbox.PreviousObservationUpdater, node::ObsNode) = POMDP
 convert_belief(::POMDPToolbox.EmptyUpdater, node::BeliefNode) = POMDPToolbox.EmptyBelief()
 
 # override this if you want to choose specific actions (you can override based on the POMDP type at the node level, or the belief type)
-function sparse_actions(pomdp::POMDPs.POMDP, s::POMDPs.State, h::BeliefNode, num_actions::Int)
-    return sparse_actions(pomdp, s, h.B, num_actions)
+function sparse_actions(pomcp::POMCPPolicy, pomdp::POMDPs.POMDP, h::BeliefNode, num_actions::Int)
+    return sparse_actions(pomcp, pomdp, h.B, num_actions)
 end
-function sparse_actions(pomdp::POMDPs.POMDP, s::POMDPs.State, b::POMDPs.Belief, num_actions::Int)
-    as = POMDPs.actions(pomdp, s)
+function sparse_actions(pomcp::POMCPPolicy, pomdp::POMDPs.POMDP, b::POMDPs.Belief, num_actions::Int)
     if num_actions > 0
-        return as[1:min(length(as),num_actions)]
+        all_act = collect(POMDPs.domain(POMDPs.actions(pomdp, b)))
+        selected_act = Array(Any, min(num_actions, length(all_act)))
+        len = length(selected_act)
+        for i in 1:len
+            j = rand(pomcp.solver.rng, 1:length(all_act))
+            selected_act[i] = all_act[j]
+            deleteat!(all_act, j)
+        end
+        return selected_act
     else
-        return as
+        return POMDPs.domain(POMDPs.actions(pomdp, b))
     end
 end
 
