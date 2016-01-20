@@ -25,12 +25,12 @@ Behavior is controlled through two mechanisms: solver options and method special
 For clarity, a keyword constructor is defined with the following arguments:
 
 - `rollout_policy` - This is the only mandatory argument. This should be a `POMDPs.Policy` that will be used in rollout simulations.
-- `eps` - Rollout simulations are terminated once the discount factor raised to the current step power is below this (see paper).
-- `c` - UCB tuning parameter (see paper).
+- `eps` - Rollout simulations are terminated once the discount factor raised to the current step power is below this (see paper). default: 0.01
+- `c` - UCB tuning parameter (see paper). default: 1
 - `tree_queries` - Number of nodes created in the tree per action decision.
 - `rng` - Random number generator.
 - `updater` - A `POMDPs.BeliefUpdater` to be used to update the belief within the policy state. By default the particle filter described in the paper will be used.
-- `rollout_updater` - The belief updater that will be used in the rollout simulations.
+- `rollout_updater` - The belief updater that will be used in the rollout simulations. default: `updater(rollout_policy)`
 - `num_sparse_actions` - If only a limited number of actions are to be considered, set this. If it is 0, all actions will be considered.
 
 ### Methods for Specialization

@@ -19,6 +19,10 @@ end
 # just return a properly constructed POMCP policy object
 function solve(solver::POMCPSolver, pomdp::POMDPs.POMDP)
     policy = POMCPPolicy(pomdp, solver)
+    if isa(solver.rollout_policy, RandomPolicyPlaceholder)
+        policy.solver.rollout_policy = RandomPolicy(pomdp)    
+        policy.solver.rollout_updater = POMDPs.updater(policy.solver.rollout_policy)
+    end
     return policy
 end
 
@@ -56,15 +60,15 @@ function search(pomcp::POMCPPolicy, belief::POMCPPolicyState, tree_queries)
     return best_node.label
 end
 
-function simulate(pomcp::POMCPPolicy, h::BeliefNode, s, depth) # cache::SimulateCache)
+function simulate(pomcp::POMCPPolicy, h::BeliefNode, s, depth)
 
     if POMDPs.discount(pomcp.problem)^depth < pomcp.solver.eps || POMDPs.isterminal(pomcp.problem, s)
         return 0
     end
 	if isempty(h.children)
-        action_space = sparse_actions(pomcp, pomcp.problem, h, pomcp.solver.num_sparse_actions)
+        action_space_iter = sparse_actions(pomcp, pomcp.problem, h, pomcp.solver.num_sparse_actions)
 		h.children = Dict{Any,ActNode}()
-		for a in action_space 
+		for a in action_space_iter
 			h.children[a] = ActNode(a,
                                     init_N(pomcp.problem, h, a),
                                     init_V(pomcp.problem, h, a),
@@ -72,11 +76,11 @@ function simulate(pomcp::POMCPPolicy, h::BeliefNode, s, depth) # cache::Simulate
                                     Dict())
 		end
 
-		return rollout(pomcp, s, h, depth)
+		return POMDPs.discount(pomcp.problem)^depth * estimate_value(pomcp, pomcp.problem, s, h)
 	end
 
     best_criterion_val = -Inf
-    best_node = nothing
+    local best_node
     for node in values(h.children)
         if node.N == 0 && h.N == 1
             criterion_value = node.V
@@ -127,7 +131,7 @@ function simulate(pomcp::POMCPPolicy, h::BeliefNode, s, depth) # cache::Simulate
     return R
 end
 
-function rollout(pomcp::POMCPPolicy, start_state, h::BeliefNode, depth)
+function rollout(pomcp::POMCPPolicy, start_state::POMDPs.State, h::BeliefNode)
     b = convert_belief(pomcp.solver.rollout_updater, h)
     sim = POMDPToolbox.RolloutSimulator(rng=pomcp.solver.rng,
                                         eps=pomcp.solver.eps,
@@ -138,17 +142,7 @@ function rollout(pomcp::POMCPPolicy, start_state, h::BeliefNode, depth)
                         pomcp.solver.rollout_updater,
                         b)
     h.N += 1 # this does not seem to be in the paper. Is it right?
-    return POMDPs.discount(pomcp.problem)^depth * r
+    return r
 end
 
-# TODO: Document
-# TODO: Not sure if the arguments for this are right
-function init_V(problem::POMDPs.POMDP, h::BeliefNode, action)
-    return 0.0
-end
 
-# TODO: Document
-# TODO: Not sure if the arguments for this are exactly what's needed
-function init_N(problem::POMDPs.POMDP, h::BeliefNode, action)
-    return 0
-end
