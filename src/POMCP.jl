@@ -110,7 +110,7 @@ end
 # the problem argument is there so that users may specialize this for their problem
 function estimate_value(pomcp::POMCPPolicy, problem::POMDPs.POMDP, start_state::POMDPs.State, h::BeliefNode)
     if pomcp.solver.value_estimate_method == :value
-        return POMDPs.value(pomcp.solver.rollout_policy, h.B)
+        return POMDPs.value(pomcp.solver.rollout_policy, h.B) # this does not seem right because it needs to be given the start state
     elseif pomcp.solver.value_estimate_method == :rollout
         return rollout(pomcp, start_state, h)
     else
