@@ -4,7 +4,7 @@ function to_dict(tree::ActNode)
     d = Dict()
     d["name"] = "$(string(tree.label))
                  N:$(tree.N)
-                 V:$(tree.V)"
+                 V:$(@sprintf("%8.2e", tree.V))"
     d["children"] = [to_dict(child) for child in values(tree.children)]
     return d
 end
@@ -18,7 +18,7 @@ end
 
 function to_dict(tree::RootNode)
     d = Dict()
-    d["name"] = string(tree.B)
+    d["name"] = "root" 
     d["children"] = [to_dict(child) for child in values(tree.children)]
     return d
 end

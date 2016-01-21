@@ -20,7 +20,7 @@ end
 function solve(solver::POMCPSolver, pomdp::POMDPs.POMDP)
     policy = POMCPPolicy(pomdp, solver)
     if isa(solver.rollout_policy, RandomPolicyPlaceholder)
-        policy.solver.rollout_policy = RandomPolicy(pomdp)    
+        policy.solver.rollout_policy = POMDPToolbox.RandomPolicy(pomdp)    
         policy.solver.rollout_updater = POMDPs.updater(policy.solver.rollout_policy)
     end
     return policy

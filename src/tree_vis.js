@@ -30,16 +30,17 @@ var treeData = [
 
 
 // ************** Generate the tree diagram	 *****************
+// var margin = {top: 20, right: 120, bottom: 20, left: 120},
 var margin = {top: 20, right: 120, bottom: 20, left: 120},
-	width = 2400 - margin.right - margin.left,
-	height = 1600 - margin.top - margin.bottom;
+	width = $("#pomcp").width() - margin.right - margin.left,
+	height = 600 - margin.top - margin.bottom;
 	
 var i = 0,
 	duration = 750,
 	root;
 
 var tree = d3.layout.tree()
-	.size([height/2, width]);
+	.size([height, width]);
 
 var diagonal = d3.svg.diagonal()
 	.projection(function(d) { return [d.y, d.x]; });
@@ -53,6 +54,7 @@ var svg = d3.select("#pomcp").append("svg")
 root = treeData[0];
 root.x0 = height / 2;
 root.y0 = 0;
+collapse(root);
 update(root);
 console.log("tree should appear")
 /*
@@ -64,7 +66,15 @@ d3.json(datafile, function(error, json_data) {
 });
 */
 
-d3.select(self.frameElement).style("height", "500px");
+// d3.select(self.frameElement).style("height", "500px");
+
+function collapse(d) {
+    if (d.children) {
+        d._children = d.children;
+        d._children.forEach(collapse);
+        d.children = null;
+    }
+}
 
 function update(source) {
 
