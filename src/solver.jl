@@ -36,22 +36,17 @@ function search(pomcp::POMCPPolicy, belief::POMDPs.Belief, tree_queries)
 end
 
 # Search for the best next move
-function search(pomcp::POMCPPolicy, belief::POMCPPolicyState, tree_queries) 
-	# cache = SimulateCache{S}()
-    s = POMDPs.create_state(pomcp.problem)
+function search(pomcp::POMCPPolicy, b::POMCPPolicyState, tree_queries) 
 
-	# finish_time = time() + timeout
-	# while time() < finish_time
     for i in 1:pomcp.solver.tree_queries
-		rand!(pomcp.solver.rng, s, belief)
-		# simulate(pomcp, belief.tree, deepcopy(s), 0) # cache)
-		simulate(pomcp, belief.tree, s, 0) # why was the deepcopy above?
+        s = POMDPs.create_state(pomcp.problem)
+		rand!(pomcp.solver.rng, s, b)
+		simulate(pomcp, b.tree, s, 0) # why was the deepcopy above?
 	end
-    # println("Search complete. Tree queried $(belief.tree.N) times")
 
     best_V = -Inf
     best_node = ActNode() # for type stability
-    for node in values(belief.tree.children)
+    for node in values(b.tree.children)
         if node.V >= best_V
             best_V = node.V
             best_node = node
