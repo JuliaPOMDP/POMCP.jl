@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/JuliaPOMDP/POMCP.jl.svg?branch=master)](https://travis-ci.org/JuliaPOMDP/POMCP.jl)
+
 # POMCP
 
 The Partially Observable Monte Carlo Planning (POMCP) online solver for POMDPs.jl.
