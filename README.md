@@ -1,5 +1,5 @@
-[![Coverage Status](https://coveralls.io/repos/github/JuliaPOMDP/POMCP.jl/badge.svg?branch=master)](https://coveralls.io/github/JuliaPOMDP/POMCP.jl?branch=master)
 [![Build Status](https://travis-ci.org/JuliaPOMDP/POMCP.jl.svg?branch=master)](https://travis-ci.org/JuliaPOMDP/POMCP.jl)
+[![Coverage Status](https://coveralls.io/repos/github/JuliaPOMDP/POMCP.jl/badge.svg?branch=master)](https://coveralls.io/github/JuliaPOMDP/POMCP.jl?branch=master)
 
 # POMCP
 
