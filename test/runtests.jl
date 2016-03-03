@@ -1,5 +1,21 @@
 using POMCP
 using Base.Test
 
-# write your own tests here
-@test 1 == 1
+using POMDPModels
+using POMDPs
+using POMDPToolbox
+
+rng = MersenneTwister(2)
+
+problem = BabyPOMDP(-5, -10)
+solver = POMCPSolver(rollout_policy=FeedWhenCrying(),
+                    eps=0.01,
+                    c=10.0,
+                    tree_queries=50, 
+                    rng=rng,
+                    updater=updater(problem))
+
+
+policy = solve(solver, problem)
+
+a = action(policy, initial_belief(problem))
