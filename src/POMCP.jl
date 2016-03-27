@@ -20,6 +20,9 @@ export
 
 #TODO are these the things I should export?
 
+"""
+The POMCP Solver type
+"""
 type POMCPSolver <: POMDPs.Solver
     eps::Float64 # will stop simulations when discount^depth is less than this
     c::Float64
@@ -75,7 +78,9 @@ convert_belief(rollout_updater::POMDPs.BeliefUpdater, node::BeliefNode) = conver
 convert_belief(::POMDPToolbox.PreviousObservationUpdater, node::ObsNode) = POMDPToolbox.PreviousObservation(node.label)
 convert_belief(::POMDPToolbox.EmptyUpdater, node::BeliefNode) = POMDPToolbox.EmptyBelief()
 
-# override this if you want to choose specific actions (you can override based on the POMDP type at the node level, or the belief type)
+"""
+override this if you want to choose specific actions (you can override based on the POMDP type at the node level, or the belief type)
+"""
 function sparse_actions(pomcp::POMCPPolicy, pomdp::POMDPs.POMDP, h::BeliefNode, num_actions::Int)
     return sparse_actions(pomcp, pomdp, h.B, num_actions)
 end
