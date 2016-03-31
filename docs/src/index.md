@@ -20,12 +20,11 @@ For a usage example, see the [Basic Usage](https://github.com/sisl/POMCP.jl/blob
 
 Behavior is controlled through two mechanisms: solver options and method specializations.
 
-{contents}
-Pages = [
-    "solver.md"
-    "methods.md"
-]
-
+    {contents}
+    Pages = [
+        "solver.md"
+        "methods.md"
+    ]
 
 There is also an interactive search tree visualizer
 
