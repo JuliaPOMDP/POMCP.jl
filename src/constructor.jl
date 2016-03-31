@@ -4,7 +4,6 @@
 type RandomPolicyPlaceholder <: POMDPs.Policy end
 POMDPs.updater(::RandomPolicyPlaceholder) = POMDPToolbox.EmptyUpdater()
 
-## Constructor for the POMCP Solver ##
 """
 Constructor for the POMCP Solver
 
