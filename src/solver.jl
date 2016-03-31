@@ -9,7 +9,7 @@ create_policy(::POMCPSolver, ::POMDPs.POMDP) = POMCPPolicy()
 # do all the computation necessary to pick the next action
 function action(policy::POMCPPolicy, belief::POMDPs.Belief, a=nothing)
     #XXX hack
-    if policy._tree_ref == nothing && isa(belief, POMCPPolicyState) 
+    if isnull(policy._tree_ref) && isa(belief, POMCPPolicyState) 
         policy._tree_ref = belief.tree
     end
     # end hack
@@ -29,7 +29,6 @@ end
 function search(pomcp::POMCPPolicy, belief::POMDPs.Belief, tree_queries)
     if isa(pomcp.solver.updater, ParticleCollectionUpdater)
         error("execution should never get here... something's wrong")
-        # error("When using the pomcp particle filter, you must use a POMCPBeliefWrapper")
     end
     # println("Creating new tree") # TODO: Document this behavior
     return search(pomcp, POMCPPolicyState(belief), tree_queries)
@@ -39,8 +38,7 @@ end
 function search(pomcp::POMCPPolicy, b::POMCPPolicyState, tree_queries) 
 
     for i in 1:pomcp.solver.tree_queries
-        s = POMDPs.create_state(pomcp.problem)
-		rand!(pomcp.solver.rng, s, b)
+		s = rand(pomcp.solver.rng, b)
 		simulate(pomcp, b.tree, s, 0) # why was the deepcopy above?
 	end
 
@@ -55,7 +53,7 @@ function search(pomcp::POMCPPolicy, b::POMCPPolicyState, tree_queries)
     return best_node.label
 end
 
-function simulate(pomcp::POMCPPolicy, h::BeliefNode, s, depth)
+function simulate{S}(pomcp::POMCPPolicy, h::BeliefNode, s::S, depth)
 
     if POMDPs.discount(pomcp.problem)^depth < pomcp.solver.eps || POMDPs.isterminal(pomcp.problem, s)
         return 0
@@ -89,25 +87,16 @@ function simulate(pomcp::POMCPPolicy, h::BeliefNode, s, depth)
     end
     a = best_node.label
 
-    sp = POMDPs.create_state(pomcp.problem)
-    o = POMDPs.create_observation(pomcp.problem)
-
-    trans_dist = POMDPs.transition(pomcp.problem, s, a)
-    rand!(pomcp.solver.rng, sp, trans_dist)
-
-    r = POMDPs.reward(pomcp.problem, s, a, sp)
-
-    obs_dist = POMDPs.observation(pomcp.problem, s, a, sp)
-    rand!(pomcp.solver.rng, o, obs_dist)
+    (sp, o, r) = generate(pomcp.problem, s, a, pomcp.solver.rng)
 
     if haskey(best_node.children, o)
         hao = best_node.children[o]
     else
         if isa(pomcp.solver.updater, ParticleCollectionUpdater)
-            hao = ObsNode(o, 0, ParticleCollection(), best_node, Dict{POMDPs.Action,ActNode}())
+            hao = ObsNode(o, 0, ParticleCollection{S}(), best_node, Dict{Any,ActNode}())
         else
             new_belief = update(pomcp.solver.updater, h.B, a, o) # this relies on h.B not being modified
-            hao = ObsNode(o, 0, new_belief, best_node, Dict{POMDPs.Action,ActNode}())
+            hao = ObsNode(o, 0, new_belief, best_node, Dict{Any,ActNode}())
         end
         best_node.children[o]=hao
     end
@@ -126,7 +115,7 @@ function simulate(pomcp::POMCPPolicy, h::BeliefNode, s, depth)
     return R
 end
 
-function rollout(pomcp::POMCPPolicy, start_state::POMDPs.State, h::BeliefNode)
+function rollout(pomcp::POMCPPolicy, start_state, h::BeliefNode)
     b = convert_belief(pomcp.solver.rollout_updater, h)
     sim = POMDPToolbox.RolloutSimulator(rng=pomcp.solver.rng,
                                         eps=pomcp.solver.eps,

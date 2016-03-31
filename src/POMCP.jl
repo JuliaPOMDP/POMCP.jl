@@ -6,6 +6,7 @@ import POMDPs: action, solve, create_policy
 import Base.rand!
 import POMDPs: update, convert_belief, updater, create_belief
 import POMDPToolbox
+import GenerativeModels
 
 
 export
@@ -57,7 +58,7 @@ create_belief(updater::POMCPUpdater) = POMCPPolicyState()
 convert_belief(up::POMCPUpdater, b::POMDPs.Belief) = POMCPPolicyState(b)
 convert_belief(::POMCPUpdater, b::POMCPPolicyState) = b
 
-function update(updater::POMCPUpdater, b_old::POMCPPolicyState, a::POMDPs.Action, o::POMDPs.Observation, b::POMCPPolicyState=POMCPPolicyState())
+function update(updater::POMCPUpdater, b_old::POMCPPolicyState, a, o, b::POMCPPolicyState=POMCPPolicyState())
     if !haskey(b_old.tree.children[a].children, o)
         # if there is no node for the observation, attempt to create one
         # TODO this will fail for the particle filter... then what?
@@ -68,7 +69,7 @@ function update(updater::POMCPUpdater, b_old::POMCPPolicyState, a::POMDPs.Action
     b.tree = b_old.tree.children[a].children[o]
     return b
 end
-function rand!(rng::AbstractRNG, s::POMDPs.State, d::POMCPPolicyState)
+function rand!(rng::AbstractRNG, s, d::POMCPPolicyState)
     rand!(rng, s, d.tree.B)
 end
 
@@ -124,7 +125,7 @@ end
 """
 This provides an initial unbiased estimate of the value at belief node h. By default it can run a rollout simulation
 """
-function estimate_value(pomcp::POMCPPolicy, problem::POMDPs.POMDP, start_state::POMDPs.State, h::BeliefNode)
+function estimate_value(pomcp::POMCPPolicy, problem::POMDPs.POMDP, start_state, h::BeliefNode)
     if pomcp.solver.value_estimate_method == :value
         return POMDPs.value(pomcp.solver.rollout_policy, h.B) # this does not seem right because it needs to be given the start state
     elseif pomcp.solver.value_estimate_method == :rollout
