@@ -100,8 +100,10 @@ function sparse_actions(pomcp::POMCPPolicy, pomdp::POMDPs.POMDP, b::POMDPs.Belie
     end
 end
 
-# TODO: Document
 # TODO: Not sure if the arguments for this are right
+"""
+return the 
+"""
 function init_V(problem::POMDPs.POMDP, h::BeliefNode, action)
     return 0.0
 end
