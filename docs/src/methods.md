@@ -1,4 +1,4 @@
-# Methods for Specialization
+# [Methods for Specialization]({ref#Methods})
 
 The following methods can be overridden to change the behavior of the solver:
 
