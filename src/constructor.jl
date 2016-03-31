@@ -7,6 +7,8 @@ POMDPs.updater(::RandomPolicyPlaceholder) = POMDPToolbox.EmptyUpdater()
 """
 Constructor for the POMCP Solver
 
+POMCPSolver properties are:
+
 - `eps` - Rollout simulations are terminated once the discount factor raised to the current step power is below this (see paper). default: 0.01
 - `c` - UCB tuning parameter (see paper). default: 1
 - `tree_queries` - Number of nodes created in the tree per action decision.

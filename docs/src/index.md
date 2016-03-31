@@ -25,6 +25,7 @@ Behavior is controlled through two mechanisms: solver options and method special
         "solver.md"
         "methods.md"
     ]
+    Depth = 2
 
 There is also an interactive search tree visualizer
 

@@ -1,4 +1,4 @@
-## Solver
+# Solver
 
 Solver Options are controlled through the POMCPSolver keyword constructor:
 
