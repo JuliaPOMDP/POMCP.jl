@@ -2,11 +2,8 @@
 # replace recursion with while loop
 # cache simulation results
 
-# using Debug
-
 create_policy(::POMCPSolver, ::POMDPs.POMDP) = POMCPPolicy()
 
-# do all the computation necessary to pick the next action
 function action(policy::POMCPPolicy, belief::POMDPs.Belief, a=nothing)
     #XXX hack
     if isnull(policy._tree_ref) && isa(belief, POMCPPolicyState) 
@@ -16,16 +13,27 @@ function action(policy::POMCPPolicy, belief::POMDPs.Belief, a=nothing)
     return search(policy, belief, policy.solver.tree_queries)
 end
 
-# just return a properly constructed POMCP policy object
+"""
+    solve(solver::POMCPSolver, pomdp::POMDPs.POMDP)
+
+Simply return a properly constructed POMCPPolicy object.
+"""
 function solve(solver::POMCPSolver, pomdp::POMDPs.POMDP)
-    policy = POMCPPolicy(pomdp, solver)
-    if isa(solver.rollout_policy, RandomPolicyPlaceholder)
-        policy.solver.rollout_policy = POMDPToolbox.RandomPolicy(pomdp)    
-        policy.solver.rollout_updater = POMDPs.updater(policy.solver.rollout_policy)
+    if isa(solver.rollout_solver, POMDPs.Policy)
+        rollout_policy = solver.rollout_solver
+    else
+        rollout_policy = solve(solver.rollout_solver, pomdp)
     end
-    return policy
+    rollout_updater = updater(rollout_policy)
+    return POMCPPolicy(pomdp, solver, rollout_policy, rollout_updater)
 end
 
+"""
+    function search(pomcp::POMCPPolicy, b::POMCPPolicyState, tree_queries) 
+    function search(pomcp::POMCPPolicy, b::POMDPs.Belief, tree_queries)
+
+Search the tree for the next best move.
+"""
 function search(pomcp::POMCPPolicy, belief::POMDPs.Belief, tree_queries)
     if isa(pomcp.solver.updater, ParticleCollectionUpdater)
         error("execution should never get here... something's wrong")
@@ -34,7 +42,6 @@ function search(pomcp::POMCPPolicy, belief::POMDPs.Belief, tree_queries)
     return search(pomcp, POMCPPolicyState(belief), tree_queries)
 end
 
-# Search for the best next move
 function search(pomcp::POMCPPolicy, b::POMCPPolicyState, tree_queries) 
 
     for i in 1:pomcp.solver.tree_queries
@@ -53,6 +60,11 @@ function search(pomcp::POMCPPolicy, b::POMCPPolicyState, tree_queries)
     return best_node.label
 end
 
+"""
+    simulate{S}(pomcp::POMCPPolicy, h::BeliefNode, s::S, depth)
+
+Move the simulation forward a single step and update the BeliefNode h accordingly.
+"""
 function simulate{S}(pomcp::POMCPPolicy, h::BeliefNode, s::S, depth)
 
     if POMDPs.discount(pomcp.problem)^depth < pomcp.solver.eps || POMDPs.isterminal(pomcp.problem, s)
@@ -87,7 +99,7 @@ function simulate{S}(pomcp::POMCPPolicy, h::BeliefNode, s::S, depth)
     end
     a = best_node.label
 
-    (sp, o, r) = generate(pomcp.problem, s, a, pomcp.solver.rng)
+    (sp, o, r) = GenerativeModels.generate_sor(pomcp.problem, s, a, pomcp.solver.rng)
 
     if haskey(best_node.children, o)
         hao = best_node.children[o]
@@ -115,18 +127,21 @@ function simulate{S}(pomcp::POMCPPolicy, h::BeliefNode, s::S, depth)
     return R
 end
 
+"""
+    rollout(pomcp::POMCPPolicy, start_state, h::BeliefNode)
+
+Perform a rollout simulation to estimate the value.
+"""
 function rollout(pomcp::POMCPPolicy, start_state, h::BeliefNode)
-    b = convert_belief(pomcp.solver.rollout_updater, h)
+    b = convert_belief(pomcp.rollout_updater, h)
     sim = POMDPToolbox.RolloutSimulator(rng=pomcp.solver.rng,
                                         eps=pomcp.solver.eps,
                                         initial_state=start_state)
     r = POMDPs.simulate(sim,
                         pomcp.problem,
-                        pomcp.solver.rollout_policy,
-                        pomcp.solver.rollout_updater,
+                        pomcp.rollout_policy,
+                        pomcp.rollout_updater,
                         b)
     h.N += 1 # this does not seem to be in the paper. Is it right?
     return r
 end
-
-

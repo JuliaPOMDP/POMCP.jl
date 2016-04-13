@@ -1,10 +1,17 @@
+"""
+Policy that builds a POMCP tree to determine an optimal next action.
+"""
 type POMCPPolicy <: POMDPs.Policy
     problem::POMDPs.POMDP
     solver::POMCPSolver
+    rollout_policy::POMDPs.Policy
+    rollout_updater::POMDPs.BeliefUpdater
+
     #XXX hack
     _tree_ref::Nullable{Any}
+
     POMCPPolicy() = new()
-    POMCPPolicy(p,s) = new(p,s,Nullable{Any}())
+    POMCPPolicy(p,s,r_pol,r_up) = new(p,s,r_pol,r_up,Nullable{Any}())
 end
 
 # XXX Need to implement ==, hash ?
@@ -16,7 +23,7 @@ type ParticleCollection{S} <: POMDPs.Belief{S}
     ParticleCollection(particles) = new(particles)
     ParticleCollection() = new(S[])
 end
-function rand{S}(rng::AbstractRNG, b::ParticleCollection{S}, sample=nothing)
+function rand(rng::AbstractRNG, b::ParticleCollection, sample=nothing)
     # return b.particles[ceil(rand(rng)*length(b.particles))]
     return b.particles[rand(rng, 1:length(b.particles))]
 end
@@ -38,13 +45,13 @@ end
 type ObsNode <: BeliefNode
     label::Any
     N::Int64
-    B::POMDPs.AbstractDistribution
+    B::POMDPs.Belief
     parent::ActNode
     children::Dict{Any,ActNode}
 end
 
 type RootNode <: BeliefNode
     N::Int64
-    B::POMDPs.AbstractDistribution
+    B::POMDPs.Belief
     children::Dict{Any,ActNode}
 end
