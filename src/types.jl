@@ -18,7 +18,7 @@ end
 """
 Belief represented by an unweighted collection of particles
 """
-type ParticleCollection{S} <: POMDPs.Belief{S}
+type ParticleCollection{S} <: POMDPs.AbstractDistribution{S}
     particles::Vector{S}
     ParticleCollection(particles) = new(particles)
     ParticleCollection() = new(S[])
@@ -42,16 +42,17 @@ type ActNode
     ActNode(l,N::Int64,V::Float64,p::BeliefNode,c::Dict{Any,Any}) = new(l,N,V,p,c)
 end
 
+# XXX might be faster if I know the exact belief type
 type ObsNode <: BeliefNode
     label::Any
     N::Int64
-    B::POMDPs.Belief
+    B::Union{POMDPs.AbstractDistribution, POMDPs.Belief}
     parent::ActNode
     children::Dict{Any,ActNode}
 end
 
 type RootNode <: BeliefNode
     N::Int64
-    B::POMDPs.Belief
+    B::Union{POMDPs.AbstractDistribution, POMDPs.Belief}
     children::Dict{Any,ActNode}
 end
