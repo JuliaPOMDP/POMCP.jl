@@ -18,4 +18,4 @@ solver = POMCPSolver(rollout_solver=FeedWhenCrying(),
 
 policy = solve(solver, problem)
 
-a = action(policy, initial_belief(problem))
+a = action(policy, initial_state_distribution(problem))

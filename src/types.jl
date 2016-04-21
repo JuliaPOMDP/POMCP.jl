@@ -5,7 +5,7 @@ type POMCPPolicy <: POMDPs.Policy
     problem::POMDPs.POMDP
     solver::POMCPSolver
     rollout_policy::POMDPs.Policy
-    rollout_updater::POMDPs.BeliefUpdater
+    rollout_updater::POMDPs.Updater
 
     #XXX hack
     _tree_ref::Nullable{Any}
@@ -28,7 +28,7 @@ function rand(rng::AbstractRNG, b::ParticleCollection, sample=nothing)
     return b.particles[rand(rng, 1:length(b.particles))]
 end
 
-type ParticleCollectionUpdater <: POMDPs.BeliefUpdater end
+type ParticleCollectionUpdater <: POMDPs.Updater end
 
 abstract BeliefNode
 
@@ -38,21 +38,25 @@ type ActNode
     V::Float64
     parent::BeliefNode
     children::Dict{Any,Any} # maps observations to ObsNodes
+
     ActNode() = new()
     ActNode(l,N::Int64,V::Float64,p::BeliefNode,c::Dict{Any,Any}) = new(l,N,V,p,c)
 end
 
-# XXX might be faster if I know the exact belief type
+# XXX might be faster if I know the exact belief type and obs type -> should parameterize
 type ObsNode <: BeliefNode
     label::Any
     N::Int64
-    B::Union{POMDPs.AbstractDistribution, POMDPs.Belief}
+    B::Any # belief/state distribution
     parent::ActNode
     children::Dict{Any,ActNode}
+
+    ObsNode() = new()
+    ObsNode(l,N,B,p,c) = new(l,N,B,p,c)
 end
 
 type RootNode <: BeliefNode
     N::Int64
-    B::Union{POMDPs.AbstractDistribution, POMDPs.Belief}
+    B::Any # belief/state distribution
     children::Dict{Any,ActNode}
 end

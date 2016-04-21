@@ -4,22 +4,24 @@ import POMDPs
 
 import POMDPs: action, solve, create_policy
 import Base.rand
-import POMDPs: update, convert_belief, updater, create_belief
+import POMDPs: update, initialize_belief, updater, create_belief
 import POMDPToolbox
 import GenerativeModels
 
 
 export
     POMCPSolver,
-    POMCPPolicyState,
+    BeliefNode,
+    RootNode,
+    ObservationNode,
     solve,
     action,
-    to_json_file,
+    # to_json_file,
     init_V,
     init_N,
     sparse_actions,
-    convert_belief,
-    estimate_value
+    estimate_value,
+    extract_belief
 
 #TODO are these the things I should export?
 
@@ -31,7 +33,7 @@ type POMCPSolver <: POMDPs.Solver
     c::Float64
     tree_queries::Int
     rng::AbstractRNG
-    updater::POMDPs.BeliefUpdater
+    updater::POMDPs.Updater
 
     value_estimate_method::Symbol # :rollout or :value
     rollout_solver::Union{POMDPs.Solver, POMDPs.Policy}
@@ -43,57 +45,51 @@ include("types.jl")
 include("constructor.jl")
 
 """
-Holds a POMCP tree.
+Chooses a child node based on the observation.
 """
-type POMCPPolicyState <: POMDPs.Belief
-    tree::BeliefNode
-end
-
-POMCPPolicyState() = POMCPPolicyState(RootNode(0, POMDPToolbox.EmptyBelief(), Dict{Any,ActNode}()))
-function POMCPPolicyState(b::POMDPs.Belief)
-    return POMCPPolicyState(RootNode(0, deepcopy(b), Dict{Any,ActNode}()))
-end
-
-"""
-Moves a POMCPPolicyState to a child node based on the observation.
-"""
-type POMCPUpdater <: POMDPs.BeliefUpdater
-    updater
+type POMCPUpdater <: POMDPs.Updater{BeliefNode}
+    updater::POMDPs.Updater
 end
 
 updater(policy::POMCPPolicy) = POMCPUpdater(policy.solver.updater)
-create_belief(updater::POMCPUpdater) = POMCPPolicyState()
-convert_belief(up::POMCPUpdater, b::POMDPs.Belief) = POMCPPolicyState(b)
-convert_belief(::POMCPUpdater, b::POMCPPolicyState) = b
+create_belief(updater::POMCPUpdater) = ObsNode()
+initialize_belief(up::POMCPUpdater, b::POMDPs.AbstractDistribution) = RootNode(0, b, Dict{Any,ActNode}())
+# initialize_belief(::POMCPUpdater, b::BeliefNode) = b # should be provided by default in POMDPs.jl
 
-function update(updater::POMCPUpdater, b_old::POMCPPolicyState, a, o, b::POMCPPolicyState=POMCPPolicyState())
-    if !haskey(b_old.tree.children[a].children, o)
+function update(updater::POMCPUpdater, b_old::BeliefNode, a, o, b=nothing)
+    if !haskey(b_old.children[a].children, o)
         # if there is no node for the observation, attempt to create one
         # TODO this will fail for the particle filter... then what?
-        new_belief = update(updater.updater, b_old.tree.B, a, o)
-        new_node = ObsNode(o, 0, new_belief, b_old.tree.children[a], Dict{Any,ActNode}())
-        b_old.tree.children[a].children[o] = new_node
+        new_belief = update(updater.updater, b_old.B, a, o)
+        new_node = ObsNode(o, 0, new_belief, b_old.children[a], Dict{Any,ActNode}())
+        b_old.children[a].children[o] = new_node
     end
-    b.tree = b_old.tree.children[a].children[o]
-    return b
+    return b_old.children[a].children[o]
 end
-function rand(rng::AbstractRNG, d::POMCPPolicyState, s=nothing)
-    rand(rng, d.tree.B)
+function rand(rng::AbstractRNG, d::BeliefNode, s)
+    rand(rng, d.B, s)
 end
+function rand(rng::AbstractRNG, d::BeliefNode)
+    rand(rng, d.B)
+end
+
 
 ## Methods for specialization
 
 """
-    convert_belief(rollout_updater::POMDPs.BeliefUpdater, node::BeliefNode) = convert_belief(rollout_updater, node.B)
+    extract_belief(rollout_updater::POMDPs.Updater, node::ObsNode) = convert_belief(rollout_updater, node.B)
 
 Return a belief compatible with the `rollout_updater` from the belief in `node`.
 
-When a rollout simulation is started, this method is used to create the initial belief (compatible with `rollout_updater`) based on the appropriate `BeliefNode` at the edge of the tree. By overriding this, a belief can be constructed based on the entire tree or entire state-action history. If this is not overriden, by default it will convert the belief associated with the node directly, i.e. `POMDPs.convert_belief(rollout_updater, node.B)`.
+When a rollout simulation is started, this method is used to create the initial belief (compatible with `rollout_updater`) based on the appropriate `BeliefNode` at the edge of the tree. By overriding this, a belief can be constructed based on the entire tree or entire state-action history. If this is not overriden, by default it will use initialize_belief on the belief associated with the node directly, i.e. `POMDPs.initialize_belief(rollout_updater, node.B)`.
 """
-convert_belief(rollout_updater::POMDPs.BeliefUpdater, node::BeliefNode) = convert_belief(rollout_updater, node.B)
+extract_belief(rollout_updater::POMDPs.Updater, node::BeliefNode) = initialize_belief(rollout_updater, node.B)
 # some defaults are provided
-convert_belief(::POMDPToolbox.PreviousObservationUpdater, node::ObsNode) = POMDPToolbox.PreviousObservation(node.label)
-convert_belief(::POMDPToolbox.EmptyUpdater, node::BeliefNode) = POMDPToolbox.EmptyBelief()
+extract_belief(::POMDPToolbox.VoidUpdater, node::BeliefNode) = nothing
+extract_belief{O}(::POMDPToolbox.PreviousObservationUpdater{O}, node::BeliefNode) = Nullable{O}(node.label)
+extract_belief{O}(::POMDPToolbox.PreviousObservationUpdater{O}, node::RootNode) = Nullable{O}()
+extract_belief{O}(::POMDPToolbox.FastPreviousObservationUpdater{O}, node::BeliefNode) = node.label
+extract_belief{O}(::POMDPToolbox.FastPreviousObservationUpdater{O}, node::RootNode) = error("Observation not available from a root node.")
 
 """
     sparse_actions(pomcp::POMCPPolicy, pomdp::POMDPs.POMDP, h::BeliefNode, num_actions::Int)
@@ -107,7 +103,7 @@ If your problem has a continuous action space, you will want to override this to
 function sparse_actions(pomcp::POMCPPolicy, pomdp::POMDPs.POMDP, h::BeliefNode, num_actions::Int)
     return sparse_actions(pomcp, pomdp, h.B, num_actions)
 end
-function sparse_actions(pomcp::POMCPPolicy, pomdp::POMDPs.POMDP, b::POMDPs.Belief, num_actions::Int)
+function sparse_actions(pomcp::POMCPPolicy, pomdp::POMDPs.POMDP, b::Any, num_actions::Int)
     if num_actions > 0
         all_act = collect(POMDPs.iterator(POMDPs.actions(pomdp, b)))
         selected_act = Array(Any, min(num_actions, length(all_act)))
@@ -143,7 +139,6 @@ function init_N(problem::POMDPs.POMDP, h::BeliefNode, action)
     return 0
 end
 
-# the problem argument is there so that users may specialize this for their problem
 """
     estimate_value(pomcp::POMCPPolicy, problem::POMDPs.POMDP, start_state, h::BeliefNode)
 

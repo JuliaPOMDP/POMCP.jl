@@ -4,10 +4,10 @@
 
 create_policy(::POMCPSolver, ::POMDPs.POMDP) = POMCPPolicy()
 
-function action(policy::POMCPPolicy, belief::POMDPs.Belief, a=nothing)
+function action(policy::POMCPPolicy, belief::Any, a=nothing)
     #XXX hack
-    if isnull(policy._tree_ref) && isa(belief, POMCPPolicyState) 
-        policy._tree_ref = belief.tree
+    if isnull(policy._tree_ref) && isa(belief, BeliefNode) 
+        policy._tree_ref = belief
     end
     # end hack
     return search(policy, belief, policy.solver.tree_queries)
@@ -29,29 +29,28 @@ function solve(solver::POMCPSolver, pomdp::POMDPs.POMDP)
 end
 
 """
-    function search(pomcp::POMCPPolicy, b::POMCPPolicyState, tree_queries) 
-    function search(pomcp::POMCPPolicy, b::POMDPs.Belief, tree_queries)
+    function search(pomcp::POMCPPolicy, b::BeliefNode, tree_queries) 
+    function search(pomcp::POMCPPolicy, b::Any, tree_queries)
 
 Search the tree for the next best move.
+
+If b is not a belief node, the policy will attempt to convert it.
 """
-function search(pomcp::POMCPPolicy, belief::POMDPs.Belief, tree_queries)
-    if isa(pomcp.solver.updater, ParticleCollectionUpdater)
-        error("execution should never get here... something's wrong")
-    end
-    # println("Creating new tree") # TODO: Document this behavior
-    return search(pomcp, POMCPPolicyState(belief), tree_queries)
+function search(pomcp::POMCPPolicy, belief::Any, tree_queries)
+    new_node = RootNode(0, belief, Dict{Any,ActNode}())
+    return search(pomcp, new_node, tree_queries)
 end
 
-function search(pomcp::POMCPPolicy, b::POMCPPolicyState, tree_queries) 
+function search(pomcp::POMCPPolicy, b::BeliefNode, tree_queries) 
 
-    for i in 1:pomcp.solver.tree_queries
+    for i in 1:tree_queries
 		s = rand(pomcp.solver.rng, b)
-		simulate(pomcp, b.tree, s, 0) # why was the deepcopy above?
+		simulate(pomcp, b, s, 0) # why was the deepcopy above?
 	end
 
     best_V = -Inf
     best_node = ActNode() # for type stability
-    for node in values(b.tree.children)
+    for node in values(b.children)
         if node.V >= best_V
             best_V = node.V
             best_node = node
@@ -133,7 +132,7 @@ end
 Perform a rollout simulation to estimate the value.
 """
 function rollout(pomcp::POMCPPolicy, start_state, h::BeliefNode)
-    b = convert_belief(pomcp.rollout_updater, h)
+    b = extract_belief(pomcp.rollout_updater, h)
     sim = POMDPToolbox.RolloutSimulator(rng=pomcp.solver.rng,
                                         eps=pomcp.solver.eps,
                                         initial_state=start_state)
