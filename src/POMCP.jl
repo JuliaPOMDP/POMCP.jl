@@ -4,18 +4,24 @@ import POMDPs
 
 import POMDPs: action, solve, create_policy
 import Base.rand
-import POMDPs: update, initialize_belief, updater, create_belief
+import POMDPs: update, updater, create_belief
 import POMDPToolbox
 import GenerativeModels
 
 
 export
     POMCPSolver,
+    POMCPUpdater,
+    POMCPPolicy,
     BeliefNode,
     RootNode,
     ObservationNode,
-    solve,
+    solver,
     action,
+    create_policy,
+    update,
+    updater,
+    create_belief,
     # to_json_file,
     init_V,
     init_N,
