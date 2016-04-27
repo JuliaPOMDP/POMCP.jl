@@ -4,7 +4,7 @@ import POMDPs
 
 import POMDPs: action, solve, create_policy
 import Base.rand
-import POMDPs: update, updater, create_belief
+import POMDPs: update, updater, create_belief, initialize_belief
 import POMDPToolbox
 import GenerativeModels
 
@@ -59,6 +59,7 @@ end
 
 updater(policy::POMCPPolicy) = POMCPUpdater(policy.solver.updater)
 create_belief(updater::POMCPUpdater) = ObsNode()
+initialize_belief(up::POMCPUpdater, b::POMDPs.AbstractDistribution, new_belief::BeliefNode) = RootNode(0, b, Dict{Any,ActNode}())
 initialize_belief(up::POMCPUpdater, b::POMDPs.AbstractDistribution) = RootNode(0, b, Dict{Any,ActNode}())
 # initialize_belief(::POMCPUpdater, b::BeliefNode) = b # should be provided by default in POMDPs.jl
 
