@@ -62,6 +62,7 @@ create_belief(updater::POMCPUpdater) = ObsNode()
 initialize_belief(up::POMCPUpdater, b::POMDPs.AbstractDistribution, new_belief::BeliefNode) = RootNode(0, b, Dict{Any,ActNode}())
 initialize_belief(up::POMCPUpdater, b::POMDPs.AbstractDistribution) = RootNode(0, b, Dict{Any,ActNode}())
 # initialize_belief(::POMCPUpdater, b::BeliefNode) = b # should be provided by default in POMDPs.jl
+initialize_belief(::POMCPUpdater, n::RootNode, ::ObsNode) = n
 
 function update(updater::POMCPUpdater, b_old::BeliefNode, a, o, b=nothing)
     if !haskey(b_old.children[a].children, o)

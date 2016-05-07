@@ -12,3 +12,6 @@ solver = POMCPSolver(rollout_solver=FeedWhenCrying(),
                     rng=MersenneTwister(2))
 
 test_solver(solver, BabyPOMDP())
+
+solver = POMCPSolver()
+test_solver(solver, BabyPOMDP())

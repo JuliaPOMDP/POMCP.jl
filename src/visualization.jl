@@ -1,5 +1,23 @@
 import JSON
 
+type TreeVisualizer
+    node::BeliefNode
+end
+
+"""
+Return text to display below the node corresponding to action or belief x
+"""
+node_tag(x) = string(x)
+
+"""
+Return text to display in the tooltip for the node corresponding to action or belief x
+"""
+tooltip_tag(x) = string(x)
+
+function create_json(v::TreeVisualizer)
+
+end
+
 function to_dict(tree::ActNode)
     d = Dict()
     d["name"] = "$(string(tree.label))
@@ -30,23 +48,28 @@ function to_json_file(tree::BeliefNode, filename="tree.json")
     close(f)
 end
 
-function Base.writemime(f::IO, ::MIME"text/html", tree::BeliefNode)
-    json = JSON.json(to_dict(tree))
+function writemime(f::IO, ::MIME"text/html", visualizer::TreeVisualizer)
+    json, root_id = create_json(visualizer)
+    # write("/tmp/tree_dump.json", json)
     css = readall(joinpath(dirname(@__FILE__()), "tree_vis.css"))
     js = readall(joinpath(dirname(@__FILE__()), "tree_vis.js"))
+    div = "trevis$(randstring())"
 
     html_string = """
-        <div id="pomcp">
+        <div id="$div">
         <style>
             $css
         </style>
-        <script src="http://d3js.org/d3.v3.min.js"></script>
+        <script src="http://d3js.org/d3.v3.js"></script>
         <script>
-            var treeData = [$json];
+            var treeData = $json;
+            var rootID = $root_id;
+            var div = "#$div";
             $js
         </script>
         </div>
     """
+    # html_string = "visualization doesn't work yet :("
 
     # for debugging
     # outfile  = open("/tmp/pomcp_debug.html","w")
