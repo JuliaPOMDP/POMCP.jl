@@ -1,54 +1,18 @@
 import JSON
 
-type TreeVisualizer
+type POMCPTreeVisualizer
     node::BeliefNode
 end
 
-"""
-Return text to display below the node corresponding to action or belief x
-"""
-node_tag(x) = string(x)
 
-"""
-Return text to display in the tooltip for the node corresponding to action or belief x
-"""
-tooltip_tag(x) = string(x)
-
-function create_json(v::TreeVisualizer)
+function create_json(v::POMCPTreeVisualizer)
 
 end
 
-function to_dict(tree::ActNode)
-    d = Dict()
-    d["name"] = "$(string(tree.label))
-                 N:$(tree.N)
-                 V:$(@sprintf("%8.2e", tree.V))"
-    d["children"] = [to_dict(child) for child in values(tree.children)]
-    return d
-end
+# TODO: set to download javascript and css from MCTS repository
 
-function to_dict(tree::ObsNode)
-    d = Dict()
-    d["name"] = string(tree.label)
-    d["children"] = [to_dict(child) for child in values(tree.children)]
-    return d
-end
-
-function to_dict(tree::RootNode)
-    d = Dict()
-    d["name"] = "root" 
-    d["children"] = [to_dict(child) for child in values(tree.children)]
-    return d
-end
-
-function to_json_file(tree::BeliefNode, filename="tree.json")
-    d = to_dict(tree)
-    f = open(filename, "w")
-    JSON.print(f,d)
-    close(f)
-end
-
-function writemime(f::IO, ::MIME"text/html", visualizer::TreeVisualizer)
+function writemime(f::IO, ::MIME"text/html", visualizer::POMCPTreeVisualizer)
+    #=
     json, root_id = create_json(visualizer)
     # write("/tmp/tree_dump.json", json)
     css = readall(joinpath(dirname(@__FILE__()), "tree_vis.css"))
@@ -69,7 +33,8 @@ function writemime(f::IO, ::MIME"text/html", visualizer::TreeVisualizer)
         </script>
         </div>
     """
-    # html_string = "visualization doesn't work yet :("
+    =#
+    html_string = "visualization doesn't work yet :("
 
     # for debugging
     # outfile  = open("/tmp/pomcp_debug.html","w")
