@@ -1,4 +1,5 @@
 import JSON
+import Base: writemime
 
 type POMCPTreeVisualizer
     node::BeliefNode

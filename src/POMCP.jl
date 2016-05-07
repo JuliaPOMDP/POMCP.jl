@@ -27,7 +27,8 @@ export
     init_N,
     sparse_actions,
     estimate_value,
-    extract_belief
+    extract_belief,
+    POMCPTreeVisualizer
 
 #TODO are these the things I should export?
 
@@ -165,6 +166,6 @@ function estimate_value(pomcp::POMCPPolicy, problem::POMDPs.POMDP, start_state, 
 end
 
 include("solver.jl")
-# include("visualization.jl")
+include("visualization.jl")
 
 end # module
