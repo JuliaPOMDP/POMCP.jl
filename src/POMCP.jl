@@ -55,7 +55,7 @@ include("constructor.jl")
 Chooses a child node based on the observation.
 """
 type POMCPUpdater <: POMDPs.Updater{BeliefNode}
-    updater::POMDPs.Updater
+    updater::POMDPs.Updater # updates the belief between nodes if necessary
 end
 
 updater(policy::POMCPPolicy) = POMCPUpdater(policy.solver.updater)
