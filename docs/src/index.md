@@ -18,6 +18,6 @@ This implementation of the POMCP solver may be used to solve POMDPs defined acco
 
 For a usage example, see the [Basic Usage](https://github.com/sisl/POMCP.jl/blob/master/notebooks/Basic%20Usage.ipynb) notebook. For some more (poorly documented) examples, see the [Sanity Checks](https://github.com/sisl/POMCP.jl/blob/master/notebooks/Sanity%20Checks.ipynb) notebook.
 
-Behavior is controlled through two mechanisms: [solver options]({ref#Solver}) and [method specializations]({ref#Methods}).
+Behavior is controlled through two mechanisms: [solver options](@ref Solver) and [method specializations](@ref Methods).
 
-There is also an interactive [search tree visualizer]({ref#Tree}).
+There is also an interactive [search tree visualizer](@ref Tree).
