@@ -15,3 +15,5 @@ test_solver(solver, BabyPOMDP())
 
 solver = POMCPSolver()
 test_solver(solver, BabyPOMDP())
+
+include("visualization.jl")
