@@ -86,7 +86,7 @@ end
 ## Methods for specialization
 
 """
-    extract_belief(rollout_updater::POMDPs.Updater, node::ObsNode) = convert_belief(rollout_updater, node.B)
+    extract_belief(rollout_updater::POMDPs.Updater, node::ObsNode) = initialize_belief(rollout_updater, node.B)
 
 Return a belief compatible with the `rollout_updater` from the belief in `node`.
 
