@@ -15,7 +15,7 @@ function update(updater::NextNodeSelector, b_old::BeliefNode, a, o, b=nothing)
     return b_old.children[a].children[o]
 end
 
-updater(policy::POMCPPolicy) = NextNodeSelector(policy.solver.node_belief_updater)
+updater(policy::POMCPPlanner) = NextNodeSelector(policy.solver.node_belief_updater)
 create_belief(updater::NextNodeSelector) = ObsNode()
 
 initialize_belief(up::NextNodeSelector, b::POMDPs.AbstractDistribution, new_belief::BeliefNode=RootNode(0, b, Dict{Any,ActNode}())) = new_belief

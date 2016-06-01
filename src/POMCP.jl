@@ -11,7 +11,7 @@ import GenerativeModels
 export
     POMCPSolver,
     POMCPUpdater,
-    POMCPPolicy,
+    POMCPPlanner,
     BeliefNode,
     RootNode,
     ObservationNode,
@@ -47,7 +47,7 @@ end
 """
 Policy that builds a POMCP tree to determine an optimal next action.
 """
-type POMCPPolicy <: POMDPs.Policy
+type POMCPPlanner <: POMDPs.Policy
     problem::POMDPs.POMDP
     solver::POMCPSolver
     rollout_policy::POMDPs.Policy
@@ -56,8 +56,8 @@ type POMCPPolicy <: POMDPs.Policy
     #XXX hack
     _tree_ref::Nullable{Any}
 
-    POMCPPolicy() = new()
-    POMCPPolicy(p,s,r_pol,r_up) = new(p,s,r_pol,r_up,Nullable{Any}())
+    POMCPPlanner() = new()
+    POMCPPlanner(p,s,r_pol,r_up) = new(p,s,r_pol,r_up,Nullable{Any}())
 end
 
 include("tree.jl")

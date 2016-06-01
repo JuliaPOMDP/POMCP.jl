@@ -1,11 +1,11 @@
 """
-    estimate_value(pomcp::POMCPPolicy, problem::POMDPs.POMDP, start_state, h::BeliefNode)
+    estimate_value(pomcp::POMCPPlanner, problem::POMDPs.POMDP, start_state, h::BeliefNode)
 
 Return an initial unbiased estimate of the value at belief node h.
 
 By default this runs a rollout simulation
 """
-function estimate_value(pomcp::POMCPPolicy, problem::POMDPs.POMDP, start_state, h::BeliefNode)
+function estimate_value(pomcp::POMCPPlanner, problem::POMDPs.POMDP, start_state, h::BeliefNode)
     if pomcp.solver.value_estimate_method == :value
         return POMDPs.value(pomcp.solver.rollout_policy, h.B) # this does not seem right because it needs to be given the start state
     elseif pomcp.solver.value_estimate_method == :rollout
@@ -16,11 +16,11 @@ function estimate_value(pomcp::POMCPPolicy, problem::POMDPs.POMDP, start_state, 
 end
 
 """
-    rollout(pomcp::POMCPPolicy, start_state, h::BeliefNode)
+    rollout(pomcp::POMCPPlanner, start_state, h::BeliefNode)
 
 Perform a rollout simulation to estimate the value.
 """
-function rollout(pomcp::POMCPPolicy, start_state, h::BeliefNode)
+function rollout(pomcp::POMCPPlanner, start_state, h::BeliefNode)
     b = extract_belief(pomcp.rollout_updater, h)
     sim = POMDPToolbox.RolloutSimulator(rng=pomcp.solver.rng,
                                         eps=pomcp.solver.eps,

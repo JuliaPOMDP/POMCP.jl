@@ -2,9 +2,9 @@
 # replace recursion with while loop
 # cache simulation results
 
-create_policy(::POMCPSolver, ::POMDPs.POMDP) = POMCPPolicy()
+create_policy(::POMCPSolver, ::POMDPs.POMDP) = POMCPPlanner()
 
-function action(policy::POMCPPolicy, belief::Any, a=nothing)
+function action(policy::POMCPPlanner, belief::Any, a=nothing)
     #XXX hack
     if isnull(policy._tree_ref) && isa(belief, BeliefNode) 
         policy._tree_ref = belief
@@ -16,7 +16,7 @@ end
 """
     solve(solver::POMCPSolver, pomdp::POMDPs.POMDP)
 
-Simply return a properly constructed POMCPPolicy object.
+Simply return a properly constructed POMCPPlanner object.
 """
 function solve(solver::POMCPSolver, pomdp::POMDPs.POMDP)
     if isa(solver.rollout_solver, POMDPs.Policy)
@@ -25,23 +25,23 @@ function solve(solver::POMCPSolver, pomdp::POMDPs.POMDP)
         rollout_policy = solve(solver.rollout_solver, pomdp)
     end
     rollout_updater = updater(rollout_policy)
-    return POMCPPolicy(pomdp, solver, rollout_policy, rollout_updater)
+    return POMCPPlanner(pomdp, solver, rollout_policy, rollout_updater)
 end
 
 """
-    function search(pomcp::POMCPPolicy, b::BeliefNode, tree_queries) 
-    function search(pomcp::POMCPPolicy, b::Any, tree_queries)
+    function search(pomcp::POMCPPlanner, b::BeliefNode, tree_queries) 
+    function search(pomcp::POMCPPlanner, b::Any, tree_queries)
 
 Search the tree for the next best move.
 
 If b is not a belief node, the policy will attempt to convert it.
 """
-function search(pomcp::POMCPPolicy, belief::Any, tree_queries)
+function search(pomcp::POMCPPlanner, belief::Any, tree_queries)
     new_node = RootNode(0, belief, Dict{Any,ActNode}())
     return search(pomcp, new_node, tree_queries)
 end
 
-function search(pomcp::POMCPPolicy, b::BeliefNode, tree_queries) 
+function search(pomcp::POMCPPlanner, b::BeliefNode, tree_queries) 
 
     for i in 1:tree_queries
 		s = rand(pomcp.solver.rng, b)
@@ -60,11 +60,11 @@ function search(pomcp::POMCPPolicy, b::BeliefNode, tree_queries)
 end
 
 """
-    simulate{S}(pomcp::POMCPPolicy, h::BeliefNode, s::S, depth)
+    simulate{S}(pomcp::POMCPPlanner, h::BeliefNode, s::S, depth)
 
 Move the simulation forward a single step and update the BeliefNode h accordingly.
 """
-function simulate{S}(pomcp::POMCPPolicy, h::BeliefNode, s::S, depth)
+function simulate{S}(pomcp::POMCPPlanner, h::BeliefNode, s::S, depth)
 
     if POMDPs.discount(pomcp.problem)^depth < pomcp.solver.eps || POMDPs.isterminal(pomcp.problem, s)
         return 0

@@ -12,4 +12,5 @@ function rand(rng::AbstractRNG, b::ParticleCollection, sample=nothing)
 end
 
 type ParticleCollectionUpdater <: POMDPs.Updater end
-# a mechanism for handling particle depletion should be added to the particle collection updater
+
+# update(Particle
