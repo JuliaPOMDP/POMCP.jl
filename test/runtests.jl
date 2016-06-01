@@ -16,6 +16,7 @@ test_solver(solver, BabyPOMDP())
 solver = POMCPSolver()
 test_solver(solver, BabyPOMDP())
 
+# test for particle depletion
 solver = POMCPSolver(rollout_solver=FeedWhenCrying(),
                     eps=0.01,
                     c=10.0,
