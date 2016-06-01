@@ -137,7 +137,7 @@
 </code></pre>
 
 <p>Return a belief compatible with the <code>rollout_updater</code> from the belief in <code>node</code>.</p>
-<p>When a rollout simulation is started, this method is used to create the initial belief (compatible with <code>rollout_updater</code>) based on the appropriate <code>BeliefNode</code> at the edge of the tree. By overriding this, a belief can be constructed based on the entire tree or entire state-action history. If this is not overriden, by default it will use initialize_belief on the belief associated with the node directly, i.e. <code>POMDPs.initialize_belief(rollout_updater, node.B)</code>.</p>
+<p>When a rollout simulation is started, this method is used to create the initial belief (compatible with <code>rollout_updater</code>) based on the appropriate <code>BeliefNode</code> at the edge of the tree. By overriding this, a belief can be constructed based on the entire tree or entire observation-action history. If this is not overriden, by default it will use initialize_belief on the belief associated with the node directly, i.e. <code>POMDPs.initialize_belief(rollout_updater, node.B)</code>.</p>
 <p><a id='POMCP.init_V-Tuple{Any,Any,Any}' href='#POMCP.init_V-Tuple{Any,Any,Any}'>#</a>
 <strong><code>POMCP.init_V</code></strong> &mdash; <em>Method</em>.</p>
 <pre><code>init_V(problem::POMDPs.POMDP, h::BeliefNode, action)
