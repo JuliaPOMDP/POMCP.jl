@@ -22,15 +22,12 @@ export
     update,
     updater,
     create_belief,
-    # to_json_file,
     init_V,
     init_N,
     sparse_actions,
     estimate_value,
     extract_belief,
     POMCPTreeVisualizer
-
-#TODO are these the things I should export?
 
 """
 The POMCP Solver type
@@ -40,7 +37,7 @@ type POMCPSolver <: POMDPs.Solver
     c::Float64
     tree_queries::Int
     rng::AbstractRNG
-    updater::POMDPs.Updater
+    node_belief_updater::POMDPs.Updater
 
     value_estimate_method::Symbol # :rollout or :value
     rollout_solver::Union{POMDPs.Solver, POMDPs.Policy}
@@ -50,26 +47,26 @@ end
 
 include("types.jl")
 include("constructor.jl")
+include("particle_filter.jl")
 
 """
 Chooses a child node based on the observation.
 """
 type POMCPUpdater <: POMDPs.Updater{BeliefNode}
-    updater::POMDPs.Updater # updates the belief between nodes if necessary
+    node_belief_updater::POMDPs.Updater # updates the belief between nodes if necessary
 end
 
-updater(policy::POMCPPolicy) = POMCPUpdater(policy.solver.updater)
+updater(policy::POMCPPolicy) = POMCPUpdater(policy.solver.node_belief_updater)
 create_belief(updater::POMCPUpdater) = ObsNode()
 initialize_belief(up::POMCPUpdater, b::POMDPs.AbstractDistribution, new_belief::BeliefNode) = RootNode(0, b, Dict{Any,ActNode}())
 initialize_belief(up::POMCPUpdater, b::POMDPs.AbstractDistribution) = RootNode(0, b, Dict{Any,ActNode}())
-# initialize_belief(::POMCPUpdater, b::BeliefNode) = b # should be provided by default in POMDPs.jl
 initialize_belief(::POMCPUpdater, n::RootNode, ::ObsNode) = n
 
 function update(updater::POMCPUpdater, b_old::BeliefNode, a, o, b=nothing)
     if !haskey(b_old.children[a].children, o)
         # if there is no node for the observation, attempt to create one
         # TODO this will fail for the particle filter... then what?
-        new_belief = update(updater.updater, b_old.B, a, o)
+        new_belief = update(updater.node_belief_updater, b_old.B, a, o)
         new_node = ObsNode(o, 0, new_belief, b_old.children[a], Dict{Any,ActNode}())
         b_old.children[a].children[o] = new_node
     end
@@ -90,7 +87,7 @@ end
 
 Return a belief compatible with the `rollout_updater` from the belief in `node`.
 
-When a rollout simulation is started, this method is used to create the initial belief (compatible with `rollout_updater`) based on the appropriate `BeliefNode` at the edge of the tree. By overriding this, a belief can be constructed based on the entire tree or entire state-action history. If this is not overriden, by default it will use initialize_belief on the belief associated with the node directly, i.e. `POMDPs.initialize_belief(rollout_updater, node.B)`.
+When a rollout simulation is started, this method is used to create the initial belief (compatible with `rollout_updater`) based on the appropriate `BeliefNode` at the edge of the tree. By overriding this, a belief can be constructed based on the entire tree or entire observation-action history. If this is not overriden, by default it will use initialize_belief on the belief associated with the node directly, i.e. `POMDPs.initialize_belief(rollout_updater, node.B)`.
 """
 extract_belief(rollout_updater::POMDPs.Updater, node::BeliefNode) = initialize_belief(rollout_updater, node.B)
 # some defaults are provided

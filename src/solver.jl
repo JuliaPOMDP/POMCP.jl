@@ -103,10 +103,10 @@ function simulate{S}(pomcp::POMCPPolicy, h::BeliefNode, s::S, depth)
     if haskey(best_node.children, o)
         hao = best_node.children[o]
     else
-        if isa(pomcp.solver.updater, ParticleCollectionUpdater)
+        if isa(pomcp.solver.node_belief_updater, ParticleCollectionUpdater)
             hao = ObsNode(o, 0, ParticleCollection{S}(), best_node, Dict{Any,ActNode}())
         else
-            new_belief = update(pomcp.solver.updater, h.B, a, o) # this relies on h.B not being modified
+            new_belief = update(pomcp.solver.node_belief_updater, h.B, a, o) # this relies on h.B not being modified
             hao = ObsNode(o, 0, new_belief, best_node, Dict{Any,ActNode}())
         end
         best_node.children[o]=hao
