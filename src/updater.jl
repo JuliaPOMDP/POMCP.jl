@@ -8,7 +8,6 @@ end
 function update(updater::NextNodeSelector, b_old::BeliefNode, a, o, b=nothing)
     if !haskey(b_old.children[a].children, o)
         # if there is no node for the observation, attempt to create one
-        # TODO this will fail for the particle filter... then what?
         new_belief = update(updater.node_belief_updater, b_old.B, a, o)
         new_node = ObsNode(o, 0, new_belief, b_old.children[a], Dict{Any,ActNode}())
         b_old.children[a].children[o] = new_node
