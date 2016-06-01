@@ -125,22 +125,3 @@ function simulate{S}(pomcp::POMCPPolicy, h::BeliefNode, s::S, depth)
 
     return R
 end
-
-"""
-    rollout(pomcp::POMCPPolicy, start_state, h::BeliefNode)
-
-Perform a rollout simulation to estimate the value.
-"""
-function rollout(pomcp::POMCPPolicy, start_state, h::BeliefNode)
-    b = extract_belief(pomcp.rollout_updater, h)
-    sim = POMDPToolbox.RolloutSimulator(rng=pomcp.solver.rng,
-                                        eps=pomcp.solver.eps,
-                                        initial_state=start_state)
-    r = POMDPs.simulate(sim,
-                        pomcp.problem,
-                        pomcp.rollout_policy,
-                        pomcp.rollout_updater,
-                        b)
-    h.N += 1 # this does not seem to be in the paper. Is it right?
-    return r
-end

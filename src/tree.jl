@@ -1,19 +1,3 @@
-"""
-Policy that builds a POMCP tree to determine an optimal next action.
-"""
-type POMCPPolicy <: POMDPs.Policy
-    problem::POMDPs.POMDP
-    solver::POMCPSolver
-    rollout_policy::POMDPs.Policy
-    rollout_updater::POMDPs.Updater
-
-    #XXX hack
-    _tree_ref::Nullable{Any}
-
-    POMCPPolicy() = new()
-    POMCPPolicy(p,s,r_pol,r_up) = new(p,s,r_pol,r_up,Nullable{Any}())
-end
-
 abstract BeliefNode
 
 type ActNode
@@ -44,3 +28,22 @@ type RootNode <: BeliefNode
     B::Any # belief/state distribution
     children::Dict{Any,ActNode}
 end
+
+"""
+    init_V(problem::POMDPs.POMDP, h::BeliefNode, action)
+
+Return the initial value (V) associated with a new action node when it is created. This can be used in concert with `init_N` to incorporate prior experience into the solver.
+"""
+function init_V(problem::POMDPs.POMDP, h::BeliefNode, action)
+    return 0.0
+end
+
+"""
+    init_N(problem::POMDPs.POMDP, h::BeliefNode, action)
+
+Return the initial number of queries (N) associated with a new action node when it is created.
+"""
+function init_N(problem::POMDPs.POMDP, h::BeliefNode, action)
+    return 0
+end
+
