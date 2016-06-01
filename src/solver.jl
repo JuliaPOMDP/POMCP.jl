@@ -103,7 +103,7 @@ function simulate{S}(pomcp::POMCPPlanner, h::BeliefNode, s::S, depth)
     if haskey(best_node.children, o)
         hao = best_node.children[o]
     else
-        if isa(pomcp.solver.node_belief_updater, ParticleCollectionUpdater)
+        if isa(pomcp.solver.node_belief_updater, ParticleReinvigorator)
             hao = ObsNode(o, 0, ParticleCollection{S}(), best_node, Dict{Any,ActNode}())
         else
             new_belief = update(pomcp.solver.node_belief_updater, h.B, a, o) # this relies on h.B not being modified
@@ -114,9 +114,8 @@ function simulate{S}(pomcp::POMCPPlanner, h::BeliefNode, s::S, depth)
 
     R = r + POMDPs.discount(pomcp.problem)*simulate(pomcp, hao, sp, depth+1)
 
-    # if isa(pomcp.solver.updater, ParticleCollectionUpdater) && !isa(h, RootNode)
-    if isa(h.B, ParticleCollection)
-        push!(h.B.particles, s)
+    if uses_states_from_planner(h.B)
+        push!(h.B, s) # insert this state into the particle collection
     end
     h.N += 1
 
