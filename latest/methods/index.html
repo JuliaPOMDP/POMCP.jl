@@ -152,7 +152,7 @@
 <p>Return the initial number of queries (N) associated with a new action node when it is created.</p>
 <p><a id='POMCP.sparse_actions-Tuple{Any,Any,Any,Any}' href='#POMCP.sparse_actions-Tuple{Any,Any,Any,Any}'>#</a>
 <strong><code>POMCP.sparse_actions</code></strong> &mdash; <em>Method</em>.</p>
-<pre><code>sparse_actions(pomcp::POMCPPolicy, pomdp::POMDPs.POMDP, h::BeliefNode, num_actions::Int)
+<pre><code>sparse_actions(pomcp::POMCPPlanner, pomdp::POMDPs.POMDP, h::BeliefNode, num_actions::Int)
 </code></pre>
 
 <p>Return an iterable object containing no more than <code>num_actions</code> actions to be considered at the current node.</p>
@@ -160,7 +160,7 @@
 <p>If your problem has a continuous action space, you will want to override this to try a sensible set of action samples.</p>
 <p><a id='POMCP.estimate_value-Tuple{Any,Any,Any,Any}' href='#POMCP.estimate_value-Tuple{Any,Any,Any,Any}'>#</a>
 <strong><code>POMCP.estimate_value</code></strong> &mdash; <em>Method</em>.</p>
-<pre><code>estimate_value(pomcp::POMCPPolicy, problem::POMDPs.POMDP, start_state, h::BeliefNode)
+<pre><code>estimate_value(pomcp::POMCPPlanner, problem::POMDPs.POMDP, start_state, h::BeliefNode)
 </code></pre>
 
 <p>Return an initial unbiased estimate of the value at belief node h.</p>
