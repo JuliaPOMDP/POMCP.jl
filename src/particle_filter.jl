@@ -77,5 +77,15 @@ function reinvigorate!(pc::ParticleCollection, r::DeadReinvigorator, old_node::B
 end
 
 function handle_unseen_observation(r::DeadReinvigorator, old_node::BeliefNode, a, o)
-    error("POMCP.jl: Particle Depletion! To fix this, implement a ParticleReinvigorator or use more tree_queries.")
+    error("""
+          POMCP.jl: Particle Depletion! To fix this, you have three options:
+                1) use more tree_queries (will only work for very small problems)
+                2) implement a ParticleReinvigorator with reinvigorate!() and handle_unseen_observation()
+                3) implement a more advanced updater for the agent (POMCP can use any
+                   belief/state distribution that supports rand())
+          """)
+end
+
+function update(::DeadReinvigorator, ::Any, ::Any, ::Any, b=nothing)
+    error("update() is not implemented for DeadReinvigorator. update() should never be needed for a ParticleReinvigorator because it uses POMCP simulations to approximate belief updates.")
 end
