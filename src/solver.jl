@@ -2,11 +2,11 @@
 # replace recursion with while loop
 # cache simulation results
 
-create_policy(::POMCPSolver, ::POMDPs.POMDP) = POMCPPlanner()
+create_policy(::Union{POMCPSolver,POMCPDPWSolver}, ::POMDPs.POMDP) = POMCPPlanner()
 
 function action(policy::POMCPPlanner, belief::Any, a=nothing)
     #XXX hack
-    if isnull(policy._tree_ref) && isa(belief, BeliefNode) 
+    if isnull(policy._tree_ref) && isa(belief, BeliefNode)
         policy._tree_ref = belief
     end
     # end hack
@@ -18,7 +18,7 @@ end
 
 Simply return a properly constructed POMCPPlanner object.
 """
-function solve(solver::POMCPSolver, pomdp::POMDPs.POMDP)
+function solve(solver::Union{POMCPSolver,POMCPDPWSolver}, pomdp::POMDPs.POMDP)
     if isa(solver.rollout_solver, POMDPs.Policy)
         rollout_policy = solver.rollout_solver
     else
@@ -29,7 +29,7 @@ function solve(solver::POMCPSolver, pomdp::POMDPs.POMDP)
 end
 
 """
-    function search(pomcp::POMCPPlanner, b::BeliefNode, tree_queries) 
+    function search(pomcp::POMCPPlanner, b::BeliefNode, tree_queries)
     function search(pomcp::POMCPPlanner, b::Any, tree_queries)
 
 Search the tree for the next best move.
@@ -41,12 +41,16 @@ function search(pomcp::POMCPPlanner, belief::Any, tree_queries)
     return search(pomcp, new_node, tree_queries)
 end
 
-function search(pomcp::POMCPPlanner, b::BeliefNode, tree_queries) 
+function search(pomcp::POMCPPlanner, b::BeliefNode, tree_queries)
 
     for i in 1:tree_queries
-		s = rand(pomcp.solver.rng, b)
-		simulate(pomcp, b, s, 0) # why was the deepcopy above?
-	end
+      s = rand(pomcp.solver.rng, b)
+      if typeof(pomcp.solver) <: POMCPSolver
+  	     simulate(pomcp, b, s, 0) # why was the deepcopy above?
+      else # POMCPDPWSolver
+        simulate_dpw(pomcp, b, s, 0)
+      end
+    end
 
     best_V = -Inf
     best_node = ActNode() # for type stability
@@ -88,7 +92,7 @@ function simulate{S}(pomcp::POMCPPlanner, h::BeliefNode, s::S, depth)
     for node in values(h.children)
         if node.N == 0 && h.N == 1
             criterion_value = node.V
-        else 
+        else
             criterion_value = node.V + pomcp.solver.c*sqrt(log(h.N)/node.N)
         end
         if criterion_value >= best_criterion_val
@@ -123,4 +127,82 @@ function simulate{S}(pomcp::POMCPPlanner, h::BeliefNode, s::S, depth)
     best_node.V += (R-best_node.V)/best_node.N
 
     return R
+end
+
+
+
+function simulate_dpw{S}(pomcp::POMCPPlanner, h::BeliefNode, s::S, depth)
+
+  if POMDPs.discount(pomcp.problem)^depth < pomcp.solver.eps || POMDPs.isterminal(pomcp.problem, s)
+      return 0
+  end
+
+  # TODO action progressive widening here
+
+  if length(h.children) <= pomcp.solver.k_action*h.N^pomcp.solver.alpha_action
+    a = next_action(pomcp.gen, pomcp.problem, s, h)
+    #@assert a in POMDPs.actions(pomcp.problem, s)
+    if !(a in keys(h.children))
+      h.children[a] = ActNode(a,
+                                    init_N(pomcp.problem, h, a),
+                                    init_V(pomcp.problem, h, a),
+                                    h,
+                                    Dict())
+    end
+    if length(h.children) <= 1
+      return POMDPs.discount(pomcp.problem)^depth * estimate_value(pomcp, pomcp.problem, s, h)
+    end
+  end
+
+  best_criterion_val = -Inf
+  local best_node
+  for (a,node) in h.children
+      if node.N == 0 && h.N == 1
+          criterion_value = node.V
+      else
+          criterion_value = node.V + pomcp.solver.c*sqrt(log(h.N)/node.N)
+      end
+      if criterion_value >= best_criterion_val
+          best_criterion_val = criterion_value
+          best_node = node
+      end
+  end
+  a = best_node.label
+
+  if length(best_node.children) <= pomcp.solver.k_observation*(best_node.N^pomcp.solver.alpha_observation)
+    # observation progressive widening
+    (sp, o, r) = GenerativeModels.generate_sor(pomcp.problem, s, a, pomcp.solver.rng)
+
+    if haskey(best_node.children, o)
+        hao = best_node.children[o]
+    else
+      if isa(pomcp.solver.updater, ParticleReinvigorator)
+          hao = ObsNode((o, sp, r,), 0, ParticleCollection{S}(), best_node, Dict{Any,ActNode}())
+      else
+          new_belief = update(pomcp.solver.updater, h.B, a, o) # this relies on h.B not being modified
+          hao = ObsNode((o, sp, r,), 0, new_belief, best_node, Dict{Any,ActNode}())
+      end
+      best_node.children[o]=hao
+    end
+  else
+    # otherwise sample nodes
+    os = collect(values(best_node.children))
+    wv = WeightVec(Int[node.N for node in os])
+    hao = sample(pomcp.solver.rng, os, wv)
+    sp = hao.label[2]
+    r = hao.label[3]
+  end
+
+  R = r + POMDPs.discount(pomcp.problem)*simulate_dpw(pomcp, hao, sp, depth+1)
+
+  if isa(pomcp.solver.updater, ParticleReinvigorator) && !isa(h, RootNode)
+  #if isa(h.B, ParticleCollection)
+      push!(h.B.particles, s)
+  end
+  h.N += 1
+
+  best_node.N += 1
+  best_node.V += (R-best_node.V)/best_node.N
+
+  return R
 end

@@ -27,3 +27,20 @@ function sparse_actions(pomcp::POMCPPlanner, pomdp::POMDPs.POMDP, b::Any, num_ac
     end
 end
 
+"""
+Action generation for progressive widening
+"""
+
+type RandomActionGenerator <: ActionGenerator
+    rng::AbstractRNG
+    action_space::Nullable{AbstractSpace}
+    RandomActionGenerator(rng::AbstractRNG=MersenneTwister(), action_space=nothing) = new(rng, Nullable{AbstractSpace}(action_space))
+end
+
+
+function next_action(gen::RandomActionGenerator, mdp::Union{POMDPs.POMDP,POMDPs.MDP}, s, snode::BeliefNode)
+    if isnull(gen.action_space)
+        gen.action_space = Nullable{AbstractSpace}(POMDPs.actions(mdp))
+    end
+    rand(gen.rng, POMDPs.actions(mdp, s, get(gen.action_space)))
+end

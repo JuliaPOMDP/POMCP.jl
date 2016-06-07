@@ -30,3 +30,30 @@ function POMCPSolver(;eps=0.01,
                        rollout_solver,
                        num_sparse_actions)
 end
+
+function POMCPDPWSolver(;eps=0.01,
+                      c=1,
+                      tree_queries=100,
+                      rng=MersenneTwister(),
+                      updater=DeadReinvigorator(),
+                      value_estimate_method=:rollout,
+                      rollout_solver=POMDPToolbox.RandomSolver(),
+                      num_sparse_actions=0,
+                      alpha_observation::Float64=0.5,
+                      k_observation::Float64=10.,
+                      alpha_action::Float64=0.5,
+                      k_action::Float64=10.)
+
+    return POMCPDPWSolver(eps,
+                       c,
+                       tree_queries,
+                       rng,
+                       updater,
+                       value_estimate_method,
+                       rollout_solver,
+                       num_sparse_actions,
+                       alpha_observation,
+                       k_observation,
+                       alpha_action,
+                       k_action)
+end
