@@ -61,6 +61,7 @@ function search{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,B}, b::BeliefNode, tree_queri
             best_node = node
         end
     end
+    println(best_node.label)
     return best_node.label
 end
 
@@ -82,7 +83,7 @@ function simulate{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,B}, h::BeliefNode, s::S, de
                                     init_N(pomcp.problem, h, a),
                                     init_V(pomcp.problem, h, a),
                                     h,
-                                    Dict())
+                                    Dict{O,BeliefNode{S,A,O,B}}())
 		end
 
 		return POMDPs.discount(pomcp.problem)^depth * estimate_value(pomcp, pomcp.problem, s, h)
@@ -109,10 +110,10 @@ function simulate{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,B}, h::BeliefNode, s::S, de
         hao = best_node.children[o]
     else
         if isa(pomcp.solver.node_belief_updater, ParticleReinvigorator)
-            hao = ObsNode(o, 0, ParticleCollection{S}(), best_node, Dict{Any,ActNode}())
+            hao = ObsNode(o, 0, ParticleCollection{S}(), best_node, Dict{A,ActNode{S,A,O,B}}())
         else
             new_belief = update(pomcp.solver.node_belief_updater, h.B, a, o) # this relies on h.B not being modified
-            hao = ObsNode(o, 0, new_belief, best_node, Dict{Any,ActNode}())
+            hao = ObsNode(o, 0, new_belief, best_node, Dict{A,ActNode{S,A,O,B}}())
         end
         best_node.children[o]=hao
     end
@@ -179,10 +180,10 @@ function simulate_dpw{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,B}, h::BeliefNode, s::S
         hao = best_node.children[o]
     else
       if isa(pomcp.solver.updater, ParticleReinvigorator)
-          hao = ObsNode((o, sp, r,), 0, ParticleCollection{S}(), best_node, Dict{A,ActNode{S,A,O,B}}())
+          hao = ObsNodeDPW((o, sp, r,), 0, ParticleCollection{S}(), best_node, Dict{A,ActNode{S,A,O,B}}())
       else
           new_belief = update(pomcp.solver.updater, h.B, a, o) # this relies on h.B not being modified
-          hao = ObsNode((o, sp, r,), 0, new_belief, best_node, Dict{Any,ActNode}())
+          hao = ObsNodeDPW((o, sp, r,), 0, new_belief, best_node, Dict{Any,ActNode{S,A,O,B}}())
       end
       best_node.children[o]=hao
     end
