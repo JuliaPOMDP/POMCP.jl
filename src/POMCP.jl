@@ -36,12 +36,12 @@ abstract ActionGenerator #TODO import from MCTS
 """
 The POMCP Solver type. Holds all the parameters
 """
-type POMCPSolver <: POMDPs.Solver
+type POMCPSolver{B} <: POMDPs.Solver
     eps::Float64 # will stop simulations when discount^depth is less than this
     c::Float64 # UCB exploration constant
     tree_queries::Int
     rng::AbstractRNG
-    node_belief_updater::POMDPs.Updater
+    node_belief_updater::POMDPs.Updater{B}
 
     value_estimate_method::Symbol # :rollout or :value
     rollout_solver::Union{POMDPs.Solver, POMDPs.Policy}
@@ -49,12 +49,12 @@ type POMCPSolver <: POMDPs.Solver
     num_sparse_actions::Int # = 0 or less if not used
 end
 
-type POMCPDPWSolver <: POMDPs.Solver
+type POMCPDPWSolver{B} <: POMDPs.Solver
     eps::Float64 # will stop simulations when discount^depth is less than this
     c::Float64
     tree_queries::Int
     rng::AbstractRNG
-    updater::POMDPs.Updater
+    updater::POMDPs.Updater{B}
 
     value_estimate_method::Symbol # :rollout or :value
     rollout_solver::Union{POMDPs.Solver, POMDPs.Policy}
@@ -70,9 +70,9 @@ end
 """
 Policy that builds a POMCP tree to determine an optimal next action.
 """
-type POMCPPlanner <: POMDPs.Policy
-    problem::POMDPs.POMDP
-    solver::Union{POMCPSolver,POMCPDPWSolver}
+type POMCPPlanner{S,A,O,B} <: POMDPs.Policy
+    problem::POMDPs.POMDP{S,A,O}
+    solver::Union{POMCPSolver{B},POMCPDPWSolver{B}}
     rollout_policy::POMDPs.Policy
     rollout_updater::POMDPs.Updater
 
@@ -81,9 +81,13 @@ type POMCPPlanner <: POMDPs.Policy
 
     gen::ActionGenerator
 
-    POMCPPlanner() = new()
-    POMCPPlanner(p,s,r_pol,r_up) = new(p,s,r_pol,r_up,Nullable{Any}(),RandomActionGenerator())
 end
+POMCPPlanner(p,
+                      s,
+                      r_pol,
+                      r_up) =
+                        POMCPPlanner(p,s,r_pol,r_up,Nullable{Any}(),RandomActionGenerator())
+#POMCPPlanner() = new()
 
 
 

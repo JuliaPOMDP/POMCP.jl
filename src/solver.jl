@@ -4,7 +4,7 @@
 
 create_policy(::Union{POMCPSolver,POMCPDPWSolver}, ::POMDPs.POMDP) = POMCPPlanner()
 
-function action(policy::POMCPPlanner, belief::Any, a=nothing)
+function action{S,A,O,B,RootBelief}(policy::POMCPPlanner{S,A,O,B}, belief::RootBelief, a=nothing)
     #XXX hack
     if isnull(policy._tree_ref) && isa(belief, BeliefNode)
         policy._tree_ref = belief
@@ -18,7 +18,7 @@ end
 
 Simply return a properly constructed POMCPPlanner object.
 """
-function solve(solver::Union{POMCPSolver,POMCPDPWSolver}, pomdp::POMDPs.POMDP)
+function solve{S,A,O,B}(solver::Union{POMCPSolver{B},POMCPDPWSolver{B}}, pomdp::POMDPs.POMDP{S,A,O})
     if isa(solver.rollout_solver, POMDPs.Policy)
         rollout_policy = solver.rollout_solver
     else
@@ -36,12 +36,12 @@ Search the tree for the next best move.
 
 If b is not a belief node, the policy will attempt to convert it.
 """
-function search(pomcp::POMCPPlanner, belief::Any, tree_queries)
-    new_node = RootNode(0, belief, Dict{Any,ActNode}())
+function search{S,A,O,B,RootBelief}(pomcp::POMCPPlanner{S,A,O,B}, belief::RootBelief, tree_queries)
+    new_node = RootNode(0, belief, Dict{A,ActNode{S,A,O,B}}())
     return search(pomcp, new_node, tree_queries)
 end
 
-function search(pomcp::POMCPPlanner, b::BeliefNode, tree_queries)
+function search{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,B}, b::BeliefNode, tree_queries)
 
     for i in 1:tree_queries
       s = rand(pomcp.solver.rng, b)
@@ -53,7 +53,8 @@ function search(pomcp::POMCPPlanner, b::BeliefNode, tree_queries)
     end
 
     best_V = -Inf
-    best_node = ActNode() # for type stability
+    #best_node = ActNode() # for type stability
+    local best_node
     for node in values(b.children)
         if node.V >= best_V
             best_V = node.V
@@ -68,7 +69,7 @@ end
 
 Move the simulation forward a single step and update the BeliefNode h accordingly.
 """
-function simulate{S}(pomcp::POMCPPlanner, h::BeliefNode, s::S, depth)
+function simulate{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,B}, h::BeliefNode, s::S, depth)
 
     if POMDPs.discount(pomcp.problem)^depth < pomcp.solver.eps || POMDPs.isterminal(pomcp.problem, s)
         return 0
@@ -131,7 +132,7 @@ end
 
 
 
-function simulate_dpw{S}(pomcp::POMCPPlanner, h::BeliefNode, s::S, depth)
+function simulate_dpw{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,B}, h::BeliefNode, s::S, depth)
 
   if POMDPs.discount(pomcp.problem)^depth < pomcp.solver.eps || POMDPs.isterminal(pomcp.problem, s)
       return 0
@@ -147,13 +148,14 @@ function simulate_dpw{S}(pomcp::POMCPPlanner, h::BeliefNode, s::S, depth)
                                     init_N(pomcp.problem, h, a),
                                     init_V(pomcp.problem, h, a),
                                     h,
-                                    Dict())
+                                    Dict{O,BeliefNode{S,A,O,B}}())
     end
     if length(h.children) <= 1
       return POMDPs.discount(pomcp.problem)^depth * estimate_value(pomcp, pomcp.problem, s, h)
     end
   end
 
+  # Calculate UCT
   best_criterion_val = -Inf
   local best_node
   for (a,node) in h.children
@@ -177,7 +179,7 @@ function simulate_dpw{S}(pomcp::POMCPPlanner, h::BeliefNode, s::S, depth)
         hao = best_node.children[o]
     else
       if isa(pomcp.solver.updater, ParticleReinvigorator)
-          hao = ObsNode((o, sp, r,), 0, ParticleCollection{S}(), best_node, Dict{Any,ActNode}())
+          hao = ObsNode((o, sp, r,), 0, ParticleCollection{S}(), best_node, Dict{A,ActNode{S,A,O,B}}())
       else
           new_belief = update(pomcp.solver.updater, h.B, a, o) # this relies on h.B not being modified
           hao = ObsNode((o, sp, r,), 0, new_belief, best_node, Dict{Any,ActNode}())
