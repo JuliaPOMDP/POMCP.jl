@@ -61,7 +61,7 @@ function search{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,B}, b::BeliefNode, tree_queri
             best_node = node
         end
     end
-    println(best_node.label)
+
     return best_node.label
 end
 
