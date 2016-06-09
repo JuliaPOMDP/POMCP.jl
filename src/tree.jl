@@ -21,7 +21,7 @@ type ObsNodeDPW{S,A,O,Belief} <: BeliefNode{S,A,O,Belief}
     parent::ActNode{S,A,O,Belief}
     children::Dict{A,ActNode{S,A,O,Belief}}
 
-    #ObsNode() = new()
+    #ObsNode() = new() # XXX TODO fix
 end
 
 type ObsNode{S,A,O,Belief} <: BeliefNode{S,A,O,Belief}
@@ -31,14 +31,14 @@ type ObsNode{S,A,O,Belief} <: BeliefNode{S,A,O,Belief}
     parent::ActNode{S,A,O,Belief}
     children::Dict{A,ActNode{S,A,O,Belief}}
 
-    #ObsNode() = new()
+    #ObsNode() = new() # XXX TODO fix
 end
 #ObsNode(l,N,B,p,c) = new(l,N,B,p,c)
 
-type RootNode{S,A,O,Belief,RootBelief} <: BeliefNode{S,A,O,Belief}
+type RootNode{RootBelief} <: BeliefNode
     N::Int64
     B::RootBelief # belief/state distribution
-    children::Dict{A,ActNode{S,A,O,Belief}}
+    children::Dict{Any,ActNode} # XXX hack to make it work with initialize_belief
 end
 
 """
