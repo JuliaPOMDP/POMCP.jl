@@ -69,4 +69,18 @@ include("rollout.jl")
 include("solver.jl")
 include("visualization.jl")
 
+"""
+Return a list of methods required to use POMCP
+"""
+function required_methods() 
+    return [
+        POMDPs.iterator,
+        POMDPs.actions,
+        POMDPs.isterminal,
+        POMDPs.discount,
+        GenerativeModels.generate_sor
+    ]
+end
+# optional: POMDPs.value
+
 end # module
