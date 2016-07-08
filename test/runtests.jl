@@ -5,6 +5,8 @@ using POMDPModels
 using POMDPs
 using POMDPToolbox
 
+POMCP.required_methods()
+
 solver = POMCPSolver(rollout_solver=FeedWhenCrying(),
                     eps=0.01,
                     c=10.0,
