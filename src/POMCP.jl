@@ -4,9 +4,10 @@ import POMDPs
 
 import POMDPs: action, solve, create_policy
 import Base.rand
-import POMDPs: update, updater, create_belief, initialize_belief
+import POMDPs: update, updater, create_belief, initialize_belief, AbstractSpace
 import POMDPToolbox
 import GenerativeModels
+import StatsBase: WeightVec, sample
 
 export
     POMCPSolver,
@@ -26,17 +27,21 @@ export
     sparse_actions,
     estimate_value,
     extract_belief,
-    POMCPTreeVisualizer
+    POMCPTreeVisualizer,
+    POMCPDPWSolver
+
+abstract ActionGenerator #TODO import from MCTS
+
 
 """
 The POMCP Solver type. Holds all the parameters
 """
-type POMCPSolver <: POMDPs.Solver
+type POMCPSolver{B} <: POMDPs.Solver
     eps::Float64 # will stop simulations when discount^depth is less than this
     c::Float64 # UCB exploration constant
     tree_queries::Int
     rng::AbstractRNG
-    node_belief_updater::POMDPs.Updater
+    node_belief_updater::POMDPs.Updater{B}
 
     value_estimate_method::Symbol # :rollout or :value
     rollout_solver::Union{POMDPs.Solver, POMDPs.Policy}
@@ -44,21 +49,65 @@ type POMCPSolver <: POMDPs.Solver
     num_sparse_actions::Int # = 0 or less if not used
 end
 
+type POMCPDPWSolver{B} <: POMDPs.Solver
+    eps::Float64 # will stop simulations when discount^depth is less than this
+    c::Float64
+    tree_queries::Int
+    rng::AbstractRNG
+    updater::POMDPs.Updater{B}
+
+    value_estimate_method::Symbol # :rollout or :value
+    rollout_solver::Union{POMDPs.Solver, POMDPs.Policy}
+
+    num_sparse_actions::Int # = 0 or less if not used
+    # DPW stuff
+    alpha_observation::Float64
+    k_observation::Float64
+    alpha_action::Float64
+    k_action::Float64
+end
+
 """
 Policy that builds a POMCP tree to determine an optimal next action.
 """
-type POMCPPlanner <: POMDPs.Policy
-    problem::POMDPs.POMDP
-    solver::POMCPSolver
+type POMCPPlanner{S,A,O,B} <: POMDPs.Policy
+    problem::POMDPs.POMDP{S,A,O}
+    solver::Union{POMCPSolver{B},POMCPDPWSolver{B}}
     rollout_policy::POMDPs.Policy
     rollout_updater::POMDPs.Updater
 
     #XXX hack
     _tree_ref::Nullable{Any}
 
-    POMCPPlanner() = new()
-    POMCPPlanner(p,s,r_pol,r_up) = new(p,s,r_pol,r_up,Nullable{Any}())
+    gen::ActionGenerator
+
 end
+POMCPPlanner(p,
+                      s,
+                      r_pol,
+                      r_up) =
+                        POMCPPlanner(p,s,r_pol,r_up,Nullable{Any}(),RandomActionGenerator())
+#POMCPPlanner() = new()
+
+
+
+#### MISC CONVENIENCE FUNCTIONS ###
+# XXX kinda sloppy, not sure what a better place is
+
+function sample(rng::AbstractRNG, wv::WeightVec)
+    t = rand(rng) * sum(wv)
+    w = values(wv)
+    n = length(w)
+    i = 1
+    cw = w[1]
+    while cw < t && i < n
+        i += 1
+        @inbounds cw += w[i]
+    end
+    return i
+end
+
+sample(rng::AbstractRNG, a::AbstractArray, wv::WeightVec) = a[sample(rng,wv)]
 
 include("tree.jl")
 include("constructor.jl")

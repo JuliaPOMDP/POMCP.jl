@@ -1,32 +1,44 @@
-abstract BeliefNode
+abstract BeliefNode{S,A,O,B}
 
-type ActNode
-    label::Any # for keeping track of which action this corresponds to
+type ActNode{S,A,O,B}
+    label::A # for keeping track of which action this corresponds to
     N::Int64
     V::Float64
     parent::BeliefNode
-    children::Dict{Any,Any} # maps observations to ObsNodes
+    children::Dict{O,BeliefNode{S,A,O,B}} # maps observations to ObsNodes
 
-    ActNode() = new()
-    ActNode(l,N::Int64,V::Float64,p::BeliefNode,c::Dict{Any,Any}) = new(l,N,V,p,c)
+    #ActNode() = new()
+    #ActNode(l,N::Int64,V::Float64,p::BeliefNode,c) = new(l,N,V,p,c)
+
 end
+#ActNode(l,N::Int64,V::Float64,p::BeliefNode,c) = ActNode(l,N,V,p,c)
 
 # XXX might be faster if I know the exact belief type and obs type -> should parameterize
-type ObsNode <: BeliefNode
-    label::Any
+type ObsNodeDPW{S,A,O,Belief} <: BeliefNode{S,A,O,Belief}
+    label::Tuple{O,S,Real}
     N::Int64
-    B::Any # belief/state distribution
-    parent::ActNode
-    children::Dict{Any,ActNode}
+    B::Belief # belief/state distribution
+    parent::ActNode{S,A,O,Belief}
+    children::Dict{A,ActNode{S,A,O,Belief}}
 
-    ObsNode() = new()
-    ObsNode(l,N,B,p,c) = new(l,N,B,p,c)
+    #ObsNode() = new() # XXX TODO fix
 end
 
-type RootNode <: BeliefNode
+type ObsNode{S,A,O,Belief} <: BeliefNode{S,A,O,Belief}
+    label::O
     N::Int64
-    B::Any # belief/state distribution
-    children::Dict{Any,ActNode}
+    B::Belief # belief/state distribution
+    parent::ActNode{S,A,O,Belief}
+    children::Dict{A,ActNode{S,A,O,Belief}}
+
+    #ObsNode() = new() # XXX TODO fix
+end
+#ObsNode(l,N,B,p,c) = new(l,N,B,p,c)
+
+type RootNode{RootBelief} <: BeliefNode
+    N::Int64
+    B::RootBelief # belief/state distribution
+    children::Dict{Any,ActNode} # XXX hack to make it work with initialize_belief
 end
 
 """
@@ -46,4 +58,3 @@ Return the initial number of queries (N) associated with a new action node when 
 function init_N(problem::POMDPs.POMDP, h::BeliefNode, action)
     return 0
 end
-

@@ -13,7 +13,7 @@ POMCPSolver properties are:
 - `num_sparse_actions` - If only a limited number of actions are to be considered, set this. If it is 0, all actions will be considered.
 """
 function POMCPSolver(;eps=0.01,
-                      c=1,
+                      c=1.,
                       tree_queries=100,
                       rng=MersenneTwister(),
                       node_belief_updater=DeadReinvigorator(),
@@ -29,4 +29,31 @@ function POMCPSolver(;eps=0.01,
                        value_estimate_method,
                        rollout_solver,
                        num_sparse_actions)
+end
+
+function POMCPDPWSolver(;eps=0.01,
+                      c=1.,
+                      tree_queries=100,
+                      rng=MersenneTwister(),
+                      updater=DeadReinvigorator(),
+                      value_estimate_method=:rollout,
+                      rollout_solver=POMDPToolbox.RandomSolver(),
+                      num_sparse_actions=0,
+                      alpha_observation::Float64=0.5,
+                      k_observation::Float64=10.,
+                      alpha_action::Float64=0.5,
+                      k_action::Float64=10.)
+
+    return POMCPDPWSolver(eps,
+                       c,
+                       tree_queries,
+                       rng,
+                       updater,
+                       value_estimate_method,
+                       rollout_solver,
+                       num_sparse_actions,
+                       alpha_observation,
+                       k_observation,
+                       alpha_action,
+                       k_action)
 end
