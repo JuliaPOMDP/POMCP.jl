@@ -8,9 +8,7 @@ Silver, D., & Veness, J. (2010). Monte-Carlo Planning in Large POMDPs. In *Advan
 
 ## Installation
 
-```julia
-Pkg.clone("https://github.com/sisl/POMCP.jl.git")
-```
+See [README.md](https://github.com/JuliaPOMDP/POMCP.jl/blob/master/README.md) on the [Github repo](https://github.com/JuliaPOMDP/POMCP.jl).
 
 ## Documentation
 
