@@ -8,6 +8,7 @@ import POMDPs: update, updater, create_belief, initialize_belief, AbstractSpace
 import POMDPToolbox
 import GenerativeModels
 import StatsBase: WeightVec, sample
+import MCTS: ActionGenerator, RandomActionGenerator
 
 export
     POMCPSolver,
@@ -28,9 +29,10 @@ export
     estimate_value,
     extract_belief,
     POMCPTreeVisualizer,
-    POMCPDPWSolver
+    POMCPDPWSolver,
+    RandomActionGenerator,
+    next_action
 
-abstract ActionGenerator #TODO import from MCTS
 
 
 """
