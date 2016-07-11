@@ -84,10 +84,12 @@ function writemime(f::IO, ::MIME"text/html", visualizer::POMCPTreeVisualizer)
             $css
         </style>
         <script>
+            (function(){
             var treeData = $json;
             var rootID = $root_id;
             var div = "$div";
             $js
+            })();
         </script>
         </div>
     """
