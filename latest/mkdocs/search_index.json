@@ -2,7 +2,7 @@
     "docs": [
         {
             "location": "/", 
-            "text": "POMCP.jl\n\n\nThe Partially Observable Monte Carlo Planning (POMCP) online solver for POMDPs.jl.\n\n\nDescribed in\n\n\nSilver, D., \n Veness, J. (2010). Monte-Carlo Planning in Large POMDPs. In \nAdvances in neural information processing systems\n (pp. 2164\u20132172). Retrieved from http://discovery.ucl.ac.uk/1347369/\n\n\n\n\nInstallation\n\n\nPkg.clone(\nhttps://github.com/sisl/POMCP.jl.git\n)\n\n\n\n\n\n\nDocumentation\n\n\nThis implementation of the POMCP solver may be used to solve POMDPs defined according to the \nPOMDPs.jl\n interface. Note that this is an online solver, so the computation is carried out as the simulation is running (simulations take a long time, but \nsolve\n takes no time).\n\n\nFor a usage example, see the \nBasic Usage\n notebook. For some more (poorly documented) examples, see the \nSanity Checks\n notebook.\n\n\nBehavior is controlled through two mechanisms: \nsolver options\n and \nmethod specializations\n.\n\n\nThere is also an interactive \nsearch tree visualizer\n.", 
+            "text": "POMCP.jl\n\n\nThe Partially Observable Monte Carlo Planning (POMCP) online solver for POMDPs.jl.\n\n\nDescribed in\n\n\nSilver, D., \n Veness, J. (2010). Monte-Carlo Planning in Large POMDPs. In \nAdvances in neural information processing systems\n (pp. 2164\u20132172). Retrieved from http://discovery.ucl.ac.uk/1347369/\n\n\n\n\nInstallation\n\n\nSee \nREADME.md\n on the \nGithub repo\n.\n\n\n\n\nDocumentation\n\n\nThis implementation of the POMCP solver may be used to solve POMDPs defined according to the \nPOMDPs.jl\n interface. Note that this is an online solver, so the computation is carried out as the simulation is running (simulations take a long time, but \nsolve\n takes no time).\n\n\nFor a usage example, see the \nBasic Usage\n notebook. For some more (poorly documented) examples, see the \nSanity Checks\n notebook.\n\n\nBehavior is controlled through two mechanisms: \nsolver options\n and \nmethod specializations\n.\n\n\nThere is also an interactive \nsearch tree visualizer\n.", 
             "title": "Home"
         }, 
         {
@@ -12,7 +12,7 @@
         }, 
         {
             "location": "/#installation", 
-            "text": "Pkg.clone( https://github.com/sisl/POMCP.jl.git )", 
+            "text": "See  README.md  on the  Github repo .", 
             "title": "Installation"
         }, 
         {
