@@ -30,7 +30,7 @@ end
 """
 Generate a new action when the set of actions is widened.
 """
-function next_action(gen::RandomActionGenerator, mdp::POMDPs.MDP, b, snode::BeliefNode)
+function next_action(gen::RandomActionGenerator, mdp::POMDPs.POMDP, b, snode::BeliefNode)
     if isnull(gen.action_space)
         gen.action_space = Nullable{AbstractSpace}(POMDPs.actions(mdp))
     end

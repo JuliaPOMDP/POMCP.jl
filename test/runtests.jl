@@ -27,8 +27,8 @@ solver = POMCPSolver(rollout_solver=FeedWhenCrying(),
 
 @test_throws ErrorException test_solver(solver, BabyPOMDP())
 
-solver = POMCPDPWSolver()
+solver = POMCPDPWSolver(tree_queries=100)
 
-@test_throws ErrorException test_solver(solver,BabyPOMDP())
+test_solver(solver,BabyPOMDP())
 
 include("visualization.jl")

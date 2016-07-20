@@ -35,25 +35,27 @@ function POMCPDPWSolver(;eps=0.01,
                       c=1.,
                       tree_queries=100,
                       rng=MersenneTwister(),
-                      updater=DeadReinvigorator(),
+                      node_belief_updater=DeadReinvigorator(),
                       value_estimate_method=:rollout,
                       rollout_solver=POMDPToolbox.RandomSolver(),
                       num_sparse_actions=0,
                       alpha_observation::Float64=0.5,
                       k_observation::Float64=10.,
                       alpha_action::Float64=0.5,
-                      k_action::Float64=10.)
+                      k_action::Float64=10.,
+                      gen::ActionGenerator=RandomActionGenerator())
 
     return POMCPDPWSolver(eps,
                        c,
                        tree_queries,
                        rng,
-                       updater,
+                       node_belief_updater,
                        value_estimate_method,
                        rollout_solver,
                        num_sparse_actions,
                        alpha_observation,
                        k_observation,
                        alpha_action,
-                       k_action)
+                       k_action,
+                       gen)
 end

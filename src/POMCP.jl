@@ -34,7 +34,6 @@ export
     next_action
 
 
-
 """
 The POMCP Solver type. Holds all the parameters
 """
@@ -56,7 +55,7 @@ type POMCPDPWSolver{B} <: POMDPs.Solver
     c::Float64
     tree_queries::Int
     rng::AbstractRNG
-    updater::POMDPs.Updater{B}
+    node_belief_updater::POMDPs.Updater{B}
 
     value_estimate_method::Symbol # :rollout or :value
     rollout_solver::Union{POMDPs.Solver, POMDPs.Policy}
@@ -67,31 +66,23 @@ type POMCPDPWSolver{B} <: POMDPs.Solver
     k_observation::Float64
     alpha_action::Float64
     k_action::Float64
+    gen::ActionGenerator
 end
 
 """
 Policy that builds a POMCP tree to determine an optimal next action.
+
+Note, you should construct this using the create_policy function
 """
-type POMCPPlanner{S,A,O,B} <: POMDPs.Policy
+type POMCPPlanner{S, A, O, SolverType} <: POMDPs.Policy
     problem::POMDPs.POMDP{S,A,O}
-    solver::Union{POMCPSolver{B},POMCPDPWSolver{B}}
+    solver::SolverType
     rollout_policy::POMDPs.Policy
     rollout_updater::POMDPs.Updater
 
     #XXX hack
     _tree_ref::Nullable{Any}
-
-    gen::ActionGenerator
-
 end
-POMCPPlanner(p,
-                      s,
-                      r_pol,
-                      r_up) =
-                        POMCPPlanner(p,s,r_pol,r_up,Nullable{Any}(),RandomActionGenerator())
-#POMCPPlanner() = new()
-
-
 
 #### MISC CONVENIENCE FUNCTIONS ###
 # XXX kinda sloppy, not sure what a better place is
