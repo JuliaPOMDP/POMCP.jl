@@ -30,7 +30,7 @@ function rollout(pomcp::POMCPPlanner, start_state, h::BeliefNode)
                         pomcp.rollout_policy,
                         pomcp.rollout_updater,
                         b)
-    h.N += 1 # this does not seem to be in the paper. Is it right?
+    # h.N += 1 # this does not seem to be in the paper. Is it right?
     return r
 end
 
@@ -47,11 +47,5 @@ extract_belief(rollout_updater::POMDPs.Updater, node::BeliefNode) = initialize_b
 extract_belief(::POMDPToolbox.VoidUpdater, node::BeliefNode) = nothing
 extract_belief{O}(::POMDPToolbox.PreviousObservationUpdater{O}, node::BeliefNode) = Nullable{O}(node.label)
 extract_belief{O}(::POMDPToolbox.PreviousObservationUpdater{O}, node::RootNode) = Nullable{O}()
-function extract_belief{O}(::POMDPToolbox.FastPreviousObservationUpdater{O}, node::BeliefNode)
-  # XXX hack: might be a better way to check this
-  if typeof(node.label) <: O
-    return node.label
-  end
-  return node.label[1] # if it's a DPW node, this is the obs (node.label = (o,sp,r))
-end
+extract_belief{O}(::POMDPToolbox.FastPreviousObservationUpdater{O}, node::BeliefNode) = node.label
 extract_belief{O}(::POMDPToolbox.FastPreviousObservationUpdater{O}, node::RootNode) = error("Observation not available from a root node.")

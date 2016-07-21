@@ -12,7 +12,7 @@ end
 
 type ObsNode{S,A,O,Belief} <: BeliefNode{S,A,O,Belief}
     label::O
-    N::Int64
+    N::Int64 # for dpw, this is the number of times we have transitioned from parent to this from the parent
     B::Belief # belief/state distribution
     children::Dict{A,ActNode{A,O,ObsNode{S,A,O,Belief}}}
 end

@@ -48,6 +48,7 @@ function search(pomcp::POMCPPlanner, b::BeliefNode, tree_queries)
     for i in 1:tree_queries
         s = rand(pomcp.solver.rng, b)
         simulate(pomcp, b, s, 0)
+        b.N += 1
     end
 
     best_V = -Inf
@@ -114,12 +115,12 @@ function simulate{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,POMCPSolver{B}}, h::BeliefN
         best_node.children[o]=hao
     end
 
+    R = r + POMDPs.discount(pomcp.problem)*simulate(pomcp, hao, sp, depth+1)
+
     if uses_states_from_planner(hao.B)
         push!(hao.B, sp) # insert this state into the particle collection
     end
     hao.N += 1
-
-    R = r + POMDPs.discount(pomcp.problem)*simulate(pomcp, hao, sp, depth+1)
 
     best_node.N += 1
     best_node.V += (R-best_node.V)/best_node.N
@@ -135,7 +136,8 @@ function simulate{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,POMCPDPWSolver{B}}, h::Beli
         return 0
     end
 
-    if length(h.children) <= pomcp.solver.k_action*h.N^pomcp.solver.alpha_action
+    total_N = reduce(add_N, 0, values(h.children))
+    if length(h.children) <= pomcp.solver.k_action*total_N^pomcp.solver.alpha_action
         a = next_action(pomcp.solver.gen, pomcp.problem, s, h)
         if !(a in keys(h.children))
             h.children[a] = ActNode(a,
@@ -152,10 +154,10 @@ function simulate{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,POMCPDPWSolver{B}}, h::Beli
     best_criterion_val = -Inf
     local best_node
     for (a,node) in h.children
-        if node.N == 0 && h.N == 1
+        if node.N == 0 && total_N <= 1
             criterion_value = node.V
         else
-            criterion_value = node.V + pomcp.solver.c*sqrt(log(h.N)/node.N)
+            criterion_value = node.V + pomcp.solver.c*sqrt(log(total_N)/node.N)
         end
         if criterion_value >= best_criterion_val
             best_criterion_val = criterion_value
@@ -165,6 +167,8 @@ function simulate{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,POMCPDPWSolver{B}}, h::Beli
     a = best_node.label
 
     if length(best_node.children) <= pomcp.solver.k_observation*(best_node.N^pomcp.solver.alpha_observation)
+        state_was_generated = true
+
         # observation progressive widening
         (sp, o, r) = GenerativeModels.generate_sor(pomcp.problem, s, a, pomcp.solver.rng)
 
@@ -179,12 +183,9 @@ function simulate{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,POMCPDPWSolver{B}}, h::Beli
             end
             best_node.children[o]=hao
         end
-
-        if uses_states_from_planner(hao.B)
-            push!(hao.B, s)
-        end
-        hao.N += 1
+        
     else
+        state_was_generated = false
         # otherwise sample nodes
         os = collect(values(best_node.children)) # XXX allocation
         wv = WeightVec(Int[node.N for node in os]) # XXX allocation
@@ -195,8 +196,22 @@ function simulate{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,POMCPDPWSolver{B}}, h::Beli
 
     R = r + POMDPs.discount(pomcp.problem)*simulate(pomcp, hao, sp, depth+1)
 
+    if state_was_generated
+        if uses_states_from_planner(hao.B)
+            push!(hao.B, sp)
+        end
+        hao.N += 1
+    end
+
     best_node.N += 1
     best_node.V += (R-best_node.V)/best_node.N
 
     return R
 end
+
+"""
+Add the N's of two nodes - for use in reduce
+"""
+add_N(a::ActNode, b::ActNode) = a.N + b.N
+add_N(a::Int, b::ActNode) = a + b.N
+
