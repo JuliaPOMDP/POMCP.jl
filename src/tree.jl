@@ -1,22 +1,13 @@
 abstract BeliefNode{S,A,O,B}
 
 # Note: links to parents were taken out because they hadn't been used in anything we've done so far
-# Note: the label is really only important for visualization
+# Note: probably don't need the labels, but they don't seem like they would really kill performance
 
 type ActNode{A, O, BNodeType <: BeliefNode} # Need A, O, everything in belief
     label::A # for keeping track of which action this corresponds to
     N::Int64
     V::Float64
     children::Dict{O, BNodeType} # maps observations to ObsNodes
-end
-
-type DPWObsNode{S,A,O,Belief} <: BeliefNode{S,A,O,Belief}
-    label::O
-    state::S
-    reward::Float64
-    N::Int64
-    B::Belief # belief/state distribution
-    children::Dict{A,ActNode{A,O,DPWObsNode{S,A,O,Belief}}}
 end
 
 type ObsNode{S,A,O,Belief} <: BeliefNode{S,A,O,Belief}
