@@ -114,12 +114,12 @@ function simulate{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,POMCPSolver{B}}, h::BeliefN
         best_node.children[o]=hao
     end
 
-    R = r + POMDPs.discount(pomcp.problem)*simulate(pomcp, hao, sp, depth+1)
-
-    if uses_states_from_planner(h.B)
-        push!(h.B, s) # insert this state into the particle collection
+    if uses_states_from_planner(hao.B)
+        push!(hao.B, sp) # insert this state into the particle collection
     end
-    h.N += 1
+    hao.N += 1
+
+    R = r + POMDPs.discount(pomcp.problem)*simulate(pomcp, hao, sp, depth+1)
 
     best_node.N += 1
     best_node.V += (R-best_node.V)/best_node.N
@@ -141,7 +141,7 @@ function simulate{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,POMCPDPWSolver{B}}, h::Beli
             h.children[a] = ActNode(a,
                                     init_N(pomcp.problem, h, a),
                                     init_V(pomcp.problem, h, a),
-                                    Dict{O,DPWObsNode{S,A,O,B}}())
+                                    Dict{O,ObsNode{S,A,O,B}}())
         end
         if length(h.children) <= 1
             return POMDPs.discount(pomcp.problem)^depth * estimate_value(pomcp, pomcp.problem, s, h)
@@ -172,14 +172,18 @@ function simulate{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,POMCPDPWSolver{B}}, h::Beli
             hao = best_node.children[o]
         else
             if isa(pomcp.solver.node_belief_updater, ParticleReinvigorator)
-                hao = DPWObsNode(o, sp, r, 0, ParticleCollection{S}(), Dict{A,ActNode{A,O,DPWObsNode{S,A,O,B}}}())
+                hao = ObsNode(o, 0, ParticleCollection{S}(), Dict{A,ActNode{A,O,ObsNode{S,A,O,B}}}())
             else
                 new_belief = update(pomcp.solver.node_belief_updater, h.B, a, o) # this relies on h.B not being modified
-                hao = DPWObsNode(o, sp, r, 0, new_belief, Dict{A,ActNode{A,O,DPWObsNode{S,A,O,B}}}())
+                hao = ObsNode(o, 0, new_belief, Dict{A,ActNode{A,O,ObsNode{S,A,O,B}}}())
             end
             best_node.children[o]=hao
         end
 
+        if uses_states_from_planner(hao.B)
+            push!(hao.B, s)
+        end
+        hao.N += 1
     else
         # otherwise sample nodes
         os = collect(values(best_node.children)) # XXX allocation
@@ -190,12 +194,6 @@ function simulate{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,POMCPDPWSolver{B}}, h::Beli
     end
 
     R = r + POMDPs.discount(pomcp.problem)*simulate(pomcp, hao, sp, depth+1)
-
-    if isa(pomcp.solver.node_belief_updater, ParticleReinvigorator) && !isa(h, RootNode)
-    #if isa(h.B, ParticleCollection)
-        push!(h.B.particles, s)
-    end
-    h.N += 1
 
     best_node.N += 1
     best_node.V += (R-best_node.V)/best_node.N
