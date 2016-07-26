@@ -134,7 +134,9 @@ end
 
 function simulate{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,POMCPDPWSolver{B}}, h::BeliefNode, s::S, depth)
 
-    if POMDPs.discount(pomcp.problem)^depth < pomcp.solver.eps || POMDPs.isterminal(pomcp.problem, s)
+    if POMDPs.discount(pomcp.problem)^depth < pomcp.solver.eps ||
+            POMDPs.isterminal(pomcp.problem, s) ||
+            depth >= pomcp.solver.max_depth
         return 0
     end
 
@@ -148,7 +150,7 @@ function simulate{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,POMCPDPWSolver{B}}, h::Beli
                                     Dict{O,ObsNode{S,A,O,B}}())
         end
         if length(h.children) <= 1
-            return POMDPs.discount(pomcp.problem)^depth * estimate_value(pomcp, pomcp.problem, s, h)
+            return POMDPs.discount(pomcp.problem)^depth * estimate_value(pomcp, pomcp.problem, s, h, depth)
         end
     end
 
