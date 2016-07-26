@@ -137,6 +137,7 @@
 <p>POMCPSolver properties are:</p>
 <ul>
 <li><code>eps</code> - Rollout simulations are terminated once the discount factor raised to the current step power is below this (see paper). default: 0.01</li>
+<li><code>max_depth</code> - Rollout simulations and tree expansion are terminated at this depth. default: typemax(Int)</li>
 <li><code>c</code> - UCB tuning parameter (see paper). default: 1</li>
 <li><code>tree_queries</code> - Number of nodes created in the tree per action decision.</li>
 <li><code>rng</code> - Random number generator.</li>
