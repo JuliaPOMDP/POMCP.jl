@@ -35,6 +35,7 @@ function POMCPSolver(;eps=0.01,
 end
 
 function POMCPDPWSolver(;eps=0.01,
+                      max_depth=typemax(Int),
                       c=1.,
                       tree_queries=100,
                       rng=MersenneTwister(),
@@ -49,6 +50,7 @@ function POMCPDPWSolver(;eps=0.01,
                       gen::ActionGenerator=RandomActionGenerator())
 
     return POMCPDPWSolver(eps,
+                       max_depth,
                        c,
                        tree_queries,
                        rng,

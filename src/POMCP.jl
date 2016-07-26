@@ -53,6 +53,7 @@ end
 
 type POMCPDPWSolver{B} <: POMDPs.Solver
     eps::Float64 # will stop simulations when discount^depth is less than this
+    max_depth::Int
     c::Float64
     tree_queries::Int
     rng::AbstractRNG
