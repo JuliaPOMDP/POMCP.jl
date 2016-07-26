@@ -4,6 +4,7 @@ Constructor for the POMCP Solver
 POMCPSolver properties are:
 
 - `eps` - Rollout simulations are terminated once the discount factor raised to the current step power is below this (see paper). default: 0.01
+- `max_depth` - Rollout simulations and tree expansion are terminated at this depth. default: typemax(Int)
 - `c` - UCB tuning parameter (see paper). default: 1
 - `tree_queries` - Number of nodes created in the tree per action decision.
 - `rng` - Random number generator.
@@ -13,6 +14,7 @@ POMCPSolver properties are:
 - `num_sparse_actions` - If only a limited number of actions are to be considered, set this. If it is 0, all actions will be considered.
 """
 function POMCPSolver(;eps=0.01,
+                      max_depth=typemax(Int),
                       c=1,
                       tree_queries=100,
                       rng=MersenneTwister(),
@@ -22,6 +24,7 @@ function POMCPSolver(;eps=0.01,
                       num_sparse_actions=0)
 
     return POMCPSolver(eps,
+                       max_depth,
                        c,
                        tree_queries,
                        rng,

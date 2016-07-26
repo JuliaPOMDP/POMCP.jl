@@ -19,6 +19,7 @@ function update{R<:ParticleReinvigorator}(updater::NodeUpdater{R}, b_old::Belief
     reinvigorate!(b_new.B,
                   updater.node_belief_updater,
                   b_old, a, o)
+
     return b_new
 end
 

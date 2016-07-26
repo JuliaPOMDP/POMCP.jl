@@ -66,7 +66,9 @@ Move the simulation forward a single step and update the BeliefNode h accordingl
 """
 function simulate{S}(pomcp::POMCPPlanner, h::BeliefNode, s::S, depth)
 
-    if POMDPs.discount(pomcp.problem)^depth < pomcp.solver.eps || POMDPs.isterminal(pomcp.problem, s)
+    if POMDPs.discount(pomcp.problem)^depth < pomcp.solver.eps ||
+            POMDPs.isterminal(pomcp.problem, s) ||
+            depth >= pomcp.solver.max_depth
         return 0
     end
 	if isempty(h.children)
@@ -80,7 +82,7 @@ function simulate{S}(pomcp::POMCPPlanner, h::BeliefNode, s::S, depth)
                                     Dict())
 		end
 
-		return POMDPs.discount(pomcp.problem)^depth * estimate_value(pomcp, pomcp.problem, s, h)
+		return POMDPs.discount(pomcp.problem)^depth * estimate_value(pomcp, pomcp.problem, s, h, depth)
 	end
 
     best_criterion_val = -Inf

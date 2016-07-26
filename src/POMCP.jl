@@ -33,6 +33,7 @@ The POMCP Solver type. Holds all the parameters
 """
 type POMCPSolver <: POMDPs.Solver
     eps::Float64 # will stop simulations when discount^depth is less than this
+    max_depth::Int
     c::Float64 # UCB exploration constant
     tree_queries::Int
     rng::AbstractRNG

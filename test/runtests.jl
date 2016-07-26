@@ -25,6 +25,7 @@ solver = POMCPSolver(rollout_solver=FeedWhenCrying(),
                     tree_queries=5, 
                     rng=MersenneTwister(2))
 
-@test_throws ErrorException test_solver(solver, BabyPOMDP())
+# @test_throws ErrorException test_solver(solver, BabyPOMDP())
+test_solver(solver, BabyPOMDP())
 
 include("visualization.jl")
