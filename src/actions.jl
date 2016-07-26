@@ -27,3 +27,12 @@ function sparse_actions(pomcp::POMCPPlanner, pomdp::POMDPs.POMDP, b::Any, num_ac
     end
 end
 
+"""
+Generate a new action when the set of actions is widened.
+"""
+function next_action(gen::RandomActionGenerator, mdp::POMDPs.POMDP, b, snode::BeliefNode)
+    if isnull(gen.action_space)
+        gen.action_space = Nullable{AbstractSpace}(POMDPs.actions(mdp))
+    end
+    rand(gen.rng, POMDPs.actions(mdp, b, get(gen.action_space)))
+end

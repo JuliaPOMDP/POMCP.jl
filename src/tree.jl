@@ -1,32 +1,26 @@
-abstract BeliefNode
+abstract BeliefNode{S,A,O,B}
 
-type ActNode
-    label::Any # for keeping track of which action this corresponds to
+# Note: links to parents were taken out because they hadn't been used in anything we've done so far
+# Note: probably don't need the labels, but they don't seem like they would really kill performance
+
+type ActNode{A, O, BNodeType <: BeliefNode} # Need A, O, everything in belief
+    label::A # for keeping track of which action this corresponds to
     N::Int64
     V::Float64
-    parent::BeliefNode
-    children::Dict{Any,Any} # maps observations to ObsNodes
-
-    ActNode() = new()
-    ActNode(l,N::Int64,V::Float64,p::BeliefNode,c::Dict{Any,Any}) = new(l,N,V,p,c)
+    children::Dict{O, BNodeType} # maps observations to ObsNodes
 end
 
-# XXX might be faster if I know the exact belief type and obs type -> should parameterize
-type ObsNode <: BeliefNode
-    label::Any
-    N::Int64
-    B::Any # belief/state distribution
-    parent::ActNode
-    children::Dict{Any,ActNode}
-
-    ObsNode() = new()
-    ObsNode(l,N,B,p,c) = new(l,N,B,p,c)
+type ObsNode{S,A,O,Belief} <: BeliefNode{S,A,O,Belief}
+    label::O
+    N::Int64 # for dpw, this is the number of times we have transitioned from parent to this from the parent
+    B::Belief # belief/state distribution
+    children::Dict{A,ActNode{A,O,ObsNode{S,A,O,Belief}}}
 end
 
-type RootNode <: BeliefNode
+type RootNode{RootBelief} <: BeliefNode
     N::Int64
-    B::Any # belief/state distribution
-    children::Dict{Any,ActNode}
+    B::RootBelief # belief/state distribution
+    children::Dict{Any,ActNode} # ActNode not parameterized here to make initialize_belief more flexible
 end
 
 """
@@ -46,4 +40,3 @@ Return the initial number of queries (N) associated with a new action node when 
 function init_N(problem::POMDPs.POMDP, h::BeliefNode, action)
     return 0
 end
-

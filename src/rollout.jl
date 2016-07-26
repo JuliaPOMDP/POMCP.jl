@@ -31,7 +31,7 @@ function rollout(pomcp::POMCPPlanner, start_state, h::BeliefNode, depth::Int)
                         pomcp.rollout_policy,
                         pomcp.rollout_updater,
                         b)
-    h.N += 1 # this does not seem to be in the paper. Is it right?
+    # h.N += 1 # this does not seem to be in the paper. Is it right?
     return r
 end
 

@@ -23,7 +23,6 @@ uses_states_from_planner(::ParticleCollection) = true
 
 Base.push!{S}(b::ParticleCollection{S}, state::S) = push!(b.particles, state)
 
-
 """
 Abstract base for a domain specific device to reinvigorate the particle collection when it has become depleted.
 
