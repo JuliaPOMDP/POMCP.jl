@@ -23,6 +23,7 @@ function update{R<:ParticleReinvigorator,A,O}(updater::RootUpdater{R}, b_old::Be
     reinvigorate!(b_new.B,
                   updater.node_belief_updater,
                   b_old, a, o)
+
     return b_new
 end
 
