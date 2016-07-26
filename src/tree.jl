@@ -1,4 +1,4 @@
-abstract BeliefNode{S,A,O,B}
+abstract BeliefNode{A,O,B}
 
 # Note: links to parents were taken out because they hadn't been used in anything we've done so far
 # Note: probably don't need the labels, but they don't seem like they would really kill performance
@@ -10,11 +10,11 @@ type ActNode{A, O, BNodeType <: BeliefNode} # Need A, O, everything in belief
     children::Dict{O, BNodeType} # maps observations to ObsNodes
 end
 
-type ObsNode{S,A,O,Belief} <: BeliefNode{S,A,O,Belief}
+type ObsNode{A,O,Belief} <: BeliefNode{A,O,Belief}
     label::O
     N::Int64 # for dpw, this is the number of times we have transitioned from parent to this from the parent
     B::Belief # belief/state distribution
-    children::Dict{A,ActNode{A,O,ObsNode{S,A,O,Belief}}}
+    children::Dict{A,ActNode{A,O,ObsNode{A,O,Belief}}}
 end
 
 type RootNode{RootBelief} <: BeliefNode
