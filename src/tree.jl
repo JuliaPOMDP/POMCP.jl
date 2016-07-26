@@ -22,6 +22,7 @@ type RootNode{RootBelief} <: BeliefNode
     B::RootBelief # belief/state distribution
     children::Dict{Any,ActNode} # ActNode not parameterized here to make initialize_belief more flexible
 end
+RootNode{RootBelief}(b::RootBelief) = RootNode{RootBelief}(0, b, Dict{Any,ActNode}())
 
 """
     init_V(problem::POMDPs.POMDP, h::BeliefNode, action)
