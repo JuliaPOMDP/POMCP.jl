@@ -85,7 +85,11 @@ function simulate{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,POMCPSolver{B}}, h::BeliefN
                                     Dict{O,ObsNode{A,O,B}}())
 		end
 
-		return POMDPs.discount(pomcp.problem)^depth * estimate_value(pomcp, pomcp.problem, s, h, depth)
+        if depth > 0 # no need for a rollout if this is the root node
+            return POMDPs.discount(pomcp.problem)^depth * estimate_value(pomcp, pomcp.problem, s, h, depth)
+        else
+            return 0.
+        end
 	end
 
     best_criterion_val = -Inf
@@ -150,7 +154,11 @@ function simulate{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,POMCPDPWSolver{B}}, h::Beli
                                     Dict{O,ObsNode{A,O,B}}())
         end
         if length(h.children) <= 1
-            return POMDPs.discount(pomcp.problem)^depth * estimate_value(pomcp, pomcp.problem, s, h, depth)
+            if depth > 0
+                return POMDPs.discount(pomcp.problem)^depth * estimate_value(pomcp, pomcp.problem, s, h, depth)
+            else
+                return 0.
+            end
         end
     end
 
