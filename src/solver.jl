@@ -202,7 +202,7 @@ function simulate{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,POMCPDPWSolver{B}}, h::Beli
         os = collect(values(best_node.children)) # XXX allocation
         wv = WeightVec(Int[node.N for node in os]) # XXX allocation
         hao = sample(pomcp.solver.rng, os, wv)
-        sp = rand!(pomcp.solver.rng, hao.B)
+        sp = rand(pomcp.solver.rng, hao.B)
         r = reward(pomcp.problem, s, a, sp)
     end
 
