@@ -45,6 +45,7 @@ create_belief{R<:ParticleReinvigorator}(updater::RootUpdater{R}) = RootNode(0, n
 
 initialize_belief(up::RootUpdater, b::POMDPs.AbstractDistribution, new_belief::BeliefNode=RootNode(b)) = new_belief
 initialize_belief(up::RootUpdater, b::POMDPs.AbstractDistribution) = RootNode(0, b, Dict{Any,ActNode}())
+initialize_belief(up::RootUpdater, b::Any) = RootNode(0, b, Dict{Any,ActNode}())
 initialize_belief(::RootUpdater, n::RootNode, ::ObsNode) = n
 
 function rand(rng::AbstractRNG, d::BeliefNode, s)
