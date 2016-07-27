@@ -5,20 +5,20 @@ abstract BeliefNode{A,O,B}
 
 type ActNode{A, O, BNodeType <: BeliefNode} # Need A, O, everything in belief
     label::A # for keeping track of which action this corresponds to
-    N::Int64
+    N::Int
     V::Float64
     children::Dict{O, BNodeType} # maps observations to ObsNodes
 end
 
 type ObsNode{A,O,Belief} <: BeliefNode{A,O,Belief}
     label::O
-    N::Int64 # for dpw, this is the number of times we have transitioned from parent to this from the parent
+    N::Int # for dpw, this is the number of times we have transitioned from parent to this from the parent
     B::Belief # belief/state distribution
     children::Dict{A,ActNode{A,O,ObsNode{A,O,Belief}}}
 end
 
 type RootNode{RootBelief} <: BeliefNode
-    N::Int64
+    N::Int
     B::RootBelief # belief/state distribution
     children::Dict{Any,ActNode} # ActNode not parameterized here to make initialize_belief more flexible
 end
