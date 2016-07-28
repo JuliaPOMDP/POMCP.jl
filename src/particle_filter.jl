@@ -6,6 +6,7 @@ type ParticleCollection{S} <: POMDPs.AbstractDistribution{S}
     ParticleCollection(particles) = new(particles)
     ParticleCollection() = new(S[])
 end
+ParticleCollection{S}(particles::AbstractVector{S}) = ParticleCollection{S}(particles)
 
 function rand(rng::AbstractRNG, b::ParticleCollection, sample=nothing)
     return b.particles[rand(rng, 1:length(b.particles))]

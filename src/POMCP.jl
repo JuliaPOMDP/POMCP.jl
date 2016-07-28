@@ -13,12 +13,15 @@ import MCTS: ActionGenerator, RandomActionGenerator
 
 export
     POMCPSolver,
-    POMCPUpdater,
+    POMCPDPWSolver,
     POMCPPlanner,
+    RootUpdater,
     BeliefNode,
     RootNode,
     ObservationNode,
-    solver,
+    POMCPTreeVisualizer,
+
+    solve,
     action,
     create_policy,
     update,
@@ -29,10 +32,15 @@ export
     sparse_actions,
     estimate_value,
     extract_belief,
-    POMCPTreeVisualizer,
-    POMCPDPWSolver,
+
+    ActionGenerator,
     RandomActionGenerator,
-    next_action
+    next_action,
+
+    ParticleCollection,
+    ParticleReinvigorator,
+    reinvigorate!,
+    handle_unseen_observation
 
 
 """
