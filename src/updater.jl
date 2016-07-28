@@ -15,7 +15,7 @@ function update{R<:ParticleReinvigorator,A,O}(updater::RootUpdater{R}, b_old::Be
     if !haskey(b_old.children[a].children, o)
         new_collection = handle_unseen_observation(updater.node_belief_updater,
                                                    b_old, a, o)
-        new_node = ObsNode(o, 0, new_collection, Dict{A,ActNode{A,O,ObsNode{A,O,typeof(new_collection)}}}())
+        new_node = ObsNode(o, 0, new_collection, Dict{A,ActNode{A,O,ObsNode{typeof(new_collection),A,O}}}())
         b_old.children[a].children[o] = new_node
     end
     b_new = b_old.children[a].children[o]
@@ -32,7 +32,7 @@ function update{A,O}(updater::RootUpdater, b_old::BeliefNode, a::A, o::O, b=noth
     if !haskey(b_old.children[a].children, o)
         # if there is no node for the observation, attempt to create one
         new_belief = update(update.node_belief_updater, b_old.B, a, o)
-        new_node = ObsNode(o, 0, new_belief, Dict{A,ActNode{A,O,ObsNode{A,O,typeof(new_belief)}}}())
+        new_node = ObsNode(o, 0, new_belief, Dict{A,ActNode{A,O,ObsNode{typeof(new_belief),A,O}}}())
         b_old.children[a].children[o] = new_node
     end
 

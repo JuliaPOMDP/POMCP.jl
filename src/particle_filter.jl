@@ -29,7 +29,7 @@ Abstract base for a domain specific device to reinvigorate the particle collecti
 
 For use with POMCP, a subtype of this should implement the functions reinvigorate! and handle_unseen_observation
 """
-abstract ParticleReinvigorator <: POMDPs.Updater{ParticleCollection}
+abstract ParticleReinvigorator{S} <: POMDPs.Updater{ParticleCollection{S}}
 
 """
     reinvigorate!(pc::ParticleCollection, r::ParticleReinvigorator, old_node::BeliefNode, a, o)
@@ -70,7 +70,7 @@ end
 """
 Default reinvigorator - cannot do anything since there is no domain knowledge
 """
-type DeadReinvigorator <: ParticleReinvigorator end
+type DeadReinvigorator{S} <: ParticleReinvigorator{S} end
 
 function reinvigorate!(pc::ParticleCollection, r::DeadReinvigorator, old_node::BeliefNode, a, o)
     if length(pc.particles) == 0

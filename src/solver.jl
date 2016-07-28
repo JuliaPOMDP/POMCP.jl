@@ -82,7 +82,7 @@ function simulate{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,POMCPSolver{B}}, h::BeliefN
 			h.children[a] = ActNode(a,
                                     init_N(pomcp.problem, h, a),
                                     init_V(pomcp.problem, h, a),
-                                    Dict{O,ObsNode{A,O,B}}())
+                                    Dict{O,ObsNode{B,A,O}}())
 		end
 
         if depth > 0 # no need for a rollout if this is the root node
@@ -113,10 +113,10 @@ function simulate{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,POMCPSolver{B}}, h::BeliefN
         hao = best_node.children[o]
     else
         if isa(pomcp.solver.node_belief_updater, ParticleReinvigorator)
-            hao = ObsNode(o, 0, ParticleCollection{S}(), Dict{A,ActNode{A,O,ObsNode{A,O,B}}}())
+            hao = ObsNode(o, 0, ParticleCollection{S}(), Dict{A,ActNode{A,O,ObsNode{B,A,O}}}())
         else
             new_belief = update(pomcp.solver.node_belief_updater, h.B, a, o) # this relies on h.B not being modified
-            hao = ObsNode(o, 0, new_belief, Dict{A,ActNode{A,O,ObsNode{A,O,B}}}())
+            hao = ObsNode(o, 0, new_belief, Dict{A,ActNode{A,O,ObsNode{B,A,O}}}())
         end
         best_node.children[o]=hao
     end
@@ -151,7 +151,7 @@ function simulate{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,POMCPDPWSolver{B}}, h::Beli
             h.children[a] = ActNode(a,
                                     init_N(pomcp.problem, h, a),
                                     init_V(pomcp.problem, h, a),
-                                    Dict{O,ObsNode{A,O,B}}())
+                                    Dict{O,ObsNode{B,A,O}}())
         end
         if length(h.children) <= 1
             if depth > 0
@@ -188,12 +188,12 @@ function simulate{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,POMCPDPWSolver{B}}, h::Beli
             hao = best_node.children[o]
         else
             if isa(pomcp.solver.node_belief_updater, ParticleReinvigorator)
-                hao = ObsNode(o, 0, ParticleCollection{S}(), Dict{A,ActNode{A,O,ObsNode{A,O,B}}}())
+                hao = ObsNode(o, 0, ParticleCollection{S}(), Dict{A,ActNode{A,O,ObsNode{B,A,O}}}())
             else
                 new_belief = update(pomcp.solver.node_belief_updater, h.B, a, o) # this relies on h.B not being modified
-                hao = ObsNode(o, 0, new_belief, Dict{A,ActNode{A,O,ObsNode{A,O,B}}}())
+                hao = ObsNode(o, 0, new_belief, Dict{A,ActNode{A,O,ObsNode{B,A,O}}}())
             end
-            best_node.children[o]=hao
+            best_node.children[o] = hao
         end
         
     else
