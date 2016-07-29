@@ -45,9 +45,7 @@ end
 
 function search(pomcp::POMCPPlanner, b::BeliefNode, tree_queries)
     #XXX hack
-    if isnull(pomcp._tree_ref)
-        pomcp._tree_ref = b
-    end
+    pomcp._tree_ref = b
     # end hack
 
     for i in 1:tree_queries
