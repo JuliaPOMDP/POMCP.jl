@@ -72,6 +72,11 @@ Default reinvigorator - cannot do anything since there is no domain knowledge
 """
 type DeadReinvigorator{S} <: ParticleReinvigorator{S} end
 
+"""
+Placeholder for a DeadReinvigorator so that the state type can be inferred during solve()
+"""
+type DefaultReinvigoratorStub end
+
 function reinvigorate!(pc::ParticleCollection, r::DeadReinvigorator, old_node::BeliefNode, a, o)
     if length(pc.particles) == 0
         particle_depletion_error()

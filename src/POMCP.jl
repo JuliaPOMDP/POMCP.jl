@@ -40,19 +40,23 @@ export
     ParticleCollection,
     ParticleReinvigorator,
     reinvigorate!,
-    handle_unseen_observation
+    handle_unseen_observation,
+    DefaultReinvigoratorStub
 
+
+include("tree.jl")
+include("particle_filter.jl")
 
 """
 The POMCP Solver type. Holds all the parameters
 """
-type POMCPSolver{B} <: POMDPs.Solver
+type POMCPSolver <: POMDPs.Solver
     eps::Float64 # will stop simulations when discount^depth is less than this
     max_depth::Int
     c::Float64 # UCB exploration constant
     tree_queries::Int
     rng::AbstractRNG
-    node_belief_updater::POMDPs.Updater{B}
+    node_belief_updater::Union{POMDPs.Updater, DefaultReinvigoratorStub}
 
     value_estimate_method::Symbol # :rollout or :value
     rollout_solver::Union{POMDPs.Solver, POMDPs.Policy}
@@ -60,13 +64,13 @@ type POMCPSolver{B} <: POMDPs.Solver
     num_sparse_actions::Int # = 0 or less if not used
 end
 
-type POMCPDPWSolver{B} <: POMDPs.Solver
+type POMCPDPWSolver <: POMDPs.Solver
     eps::Float64 # will stop simulations when discount^depth is less than this
     max_depth::Int
     c::Float64
     tree_queries::Int
     rng::AbstractRNG
-    node_belief_updater::POMDPs.Updater{B}
+    node_belief_updater::Union{POMDPs.Updater, DefaultReinvigoratorStub}
 
     value_estimate_method::Symbol # :rollout or :value
     rollout_solver::Union{POMDPs.Solver, POMDPs.Policy}
@@ -85,9 +89,10 @@ Policy that builds a POMCP tree to determine an optimal next action.
 
 Note, you should construct this using the create_policy function
 """
-type POMCPPlanner{S, A, O, SolverType} <: POMDPs.Policy
+type POMCPPlanner{S, A, O, B, SolverType} <: POMDPs.Policy
     problem::POMDPs.POMDP{S,A,O}
     solver::SolverType
+    node_belief_updater::POMDPs.Updater{B}
     rollout_policy::POMDPs.Policy
     rollout_updater::POMDPs.Updater
 
@@ -95,9 +100,7 @@ type POMCPPlanner{S, A, O, SolverType} <: POMDPs.Policy
     _tree_ref::Nullable{Any}
 end
 
-include("tree.jl")
 include("constructor.jl")
-include("particle_filter.jl")
 include("updater.jl")
 include("actions.jl")
 include("rollout.jl")

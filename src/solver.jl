@@ -13,14 +13,19 @@ end
 
 Simply return a properly constructed POMCPPlanner object.
 """
-function solve(solver::Union{POMCPSolver,POMCPDPWSolver}, pomdp::POMDPs.POMDP)
+function solve{S}(solver::Union{POMCPSolver,POMCPDPWSolver}, pomdp::POMDPs.POMDP{S})
     if isa(solver.rollout_solver, POMDPs.Policy)
         rollout_policy = solver.rollout_solver
     else
         rollout_policy = solve(solver.rollout_solver, pomdp)
     end
+    if isa(solver.node_belief_updater, DefaultReinvigoratorStub)
+        node_belief_updater = DeadReinvigorator{S}()
+    else
+        node_belief_updater = solver.node_belief_updater
+    end
     rollout_updater = updater(rollout_policy)
-    return POMCPPlanner(pomdp, solver, rollout_policy, rollout_updater, Nullable{Any}())
+    return POMCPPlanner(pomdp, solver, node_belief_updater, rollout_policy, rollout_updater, Nullable{Any}())
 end
 
 solve(solver::Union{POMCPSolver,POMCPDPWSolver}, pomdp::POMDPs.POMDP, dummy_policy) = solve(solver, pomdp)
@@ -33,7 +38,7 @@ Search the tree for the next best move.
 
 If b is not a belief node, the policy will attempt to convert it.
 """
-function search{S,A,O,B,RootBelief}(pomcp::POMCPPlanner{S,A,O,B}, belief::RootBelief, tree_queries)
+function search{RootBelief}(pomcp::POMCPPlanner, belief::RootBelief, tree_queries)
     new_node = RootNode(belief)
     return search(pomcp, new_node, tree_queries)
 end
@@ -68,7 +73,7 @@ end
 
 Move the simulation forward a single step and update the BeliefNode h accordingly.
 """
-function simulate{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,POMCPSolver{B}}, h::BeliefNode, s::S, depth)
+function simulate{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,B,POMCPSolver}, h::BeliefNode, s::S, depth)
 
     if POMDPs.discount(pomcp.problem)^depth < pomcp.solver.eps ||
             POMDPs.isterminal(pomcp.problem, s) ||
@@ -112,10 +117,10 @@ function simulate{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,POMCPSolver{B}}, h::BeliefN
     if haskey(best_node.children, o)
         hao = best_node.children[o]
     else
-        if isa(pomcp.solver.node_belief_updater, ParticleReinvigorator)
+        if isa(pomcp.node_belief_updater, ParticleReinvigorator)
             hao = ObsNode(o, 0, ParticleCollection{S}(), Dict{A,ActNode{A,O,ObsNode{B,A,O}}}())
         else
-            new_belief = update(pomcp.solver.node_belief_updater, h.B, a, o) # this relies on h.B not being modified
+            new_belief = update(pomcp.node_belief_updater, h.B, a, o) # this relies on h.B not being modified
             hao = ObsNode(o, 0, new_belief, Dict{A,ActNode{A,O,ObsNode{B,A,O}}}())
         end
         best_node.children[o]=hao
@@ -136,7 +141,7 @@ end
 
 
 
-function simulate{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,POMCPDPWSolver{B}}, h::BeliefNode, s::S, depth)
+function simulate{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,B,POMCPDPWSolver}, h::BeliefNode, s::S, depth)
 
     if POMDPs.discount(pomcp.problem)^depth < pomcp.solver.eps ||
             POMDPs.isterminal(pomcp.problem, s) ||
@@ -187,10 +192,10 @@ function simulate{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,POMCPDPWSolver{B}}, h::Beli
         if haskey(best_node.children, o)
             hao = best_node.children[o]
         else
-            if isa(pomcp.solver.node_belief_updater, ParticleReinvigorator)
+            if isa(pomcp.node_belief_updater, ParticleReinvigorator)
                 hao = ObsNode(o, 0, ParticleCollection{S}(), Dict{A,ActNode{A,O,ObsNode{B,A,O}}}())
             else
-                new_belief = update(pomcp.solver.node_belief_updater, h.B, a, o) # this relies on h.B not being modified
+                new_belief = update(pomcp.node_belief_updater, h.B, a, o) # this relies on h.B not being modified
                 hao = ObsNode(o, 0, new_belief, Dict{A,ActNode{A,O,ObsNode{B,A,O}}}())
             end
             best_node.children[o] = hao

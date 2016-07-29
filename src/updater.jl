@@ -31,7 +31,7 @@ end
 function update{A,O}(updater::RootUpdater, b_old::BeliefNode, a::A, o::O, b=nothing)
     if !haskey(b_old.children[a].children, o)
         # if there is no node for the observation, attempt to create one
-        new_belief = update(update.node_belief_updater, b_old.B, a, o)
+        new_belief = update(updater.node_belief_updater, b_old.B, a, o)
         new_node = ObsNode(o, 0, new_belief, Dict{A,ActNode{A,O,ObsNode{typeof(new_belief),A,O}}}())
         b_old.children[a].children[o] = new_node
     end
@@ -39,7 +39,7 @@ function update{A,O}(updater::RootUpdater, b_old::BeliefNode, a::A, o::O, b=noth
     return b_old.children[a].children[o]
 end
 
-updater(policy::POMCPPlanner) = RootUpdater(policy.solver.node_belief_updater)
+updater(policy::POMCPPlanner) = RootUpdater(policy.node_belief_updater)
 create_belief(updater::RootUpdater) = RootNode(0, create_belief(updater.node_belief_updater), Dict{Any,ActNode}())
 create_belief{R<:ParticleReinvigorator}(updater::RootUpdater{R}) = RootNode(0, nothing, Dict{Any,ActNode}())
 
