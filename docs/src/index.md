@@ -22,7 +22,7 @@ Behavior is controlled through two mechanisms: [solver options](@ref Solver) and
 
 ### Belief Updates
 
-By default, POMCP uses an unweighted particle filter for belief updates as discussed in the original paper describing it. However, this implementation can use any Updater to keep track of the belief. A notebook describing the various belief updater options and features can be viewed here: 
+By default, POMCP uses an unweighted particle filter for belief updates as discussed in the original paper describing it. However, this implementation can use any Updater to keep track of the belief. A notebook describing the various belief updater options and features can be viewed here: [http://nbviewer.jupyter.org/github/JuliaPOMDP/POMCP.jl/blob/master/notebooks/Belief_and_Particle_Filter_Options.ipynb](http://nbviewer.jupyter.org/github/JuliaPOMDP/POMCP.jl/blob/master/notebooks/Belief_and_Particle_Filter_Options.ipynb)
 
 ### [Tree Visualization](@id Tree)
 
