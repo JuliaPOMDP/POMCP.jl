@@ -34,3 +34,5 @@ solver = POMCPDPWSolver(tree_queries=100)
 test_solver(solver,BabyPOMDP())
 
 include("visualization.jl")
+
+include("Belief_and_Particle_Filter_Options.jl")
