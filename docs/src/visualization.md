@@ -1,4 +1,4 @@
-# [Tree Visualization](@ref Tree)
+# [Tree Visualization](@id Tree)
 
 Interactive visualization of the MCTS tree is available in Jupyter notebooks. Run the Display Tree notebook in the notebooks folder for a demonstration, or view it here: [http://nbviewer.jupyter.org/github/JuliaPOMDP/POMCP.jl/blob/master/notebooks/Display_Tree.ipynb](http://nbviewer.jupyter.org/github/JuliaPOMDP/POMCP.jl/blob/master/notebooks/Display_Tree.ipynb)
 
