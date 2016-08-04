@@ -47,7 +47,13 @@ POMCPSolver properties are:
 - `node_belief_updater` - A `POMDPs.Updater` to be used to update the belief in the nodes of the belief tree. By default the particle filter described in the paper will be used.
 - `value_estimate_method` - Either `:value` to use the `POMDPs.value()` function or `:rollout` to use a rollout simulation.
 - `rollout_solver` - This should be a `POMDPs.Solver` or `POMDPs.Policy` that will be used in rollout simulations. If it is a `Solver`, `solve` will be called to determine the rollout policy. By default a random policy is used.
-- `num_sparse_actions` - If only a limited number of actions are to be considered, set this. If it is 0, all actions will be considered.
+- `alpha_observation` - Exponent parameter for progressive widening of the number of observation nodes. default: 0.5
+- `k_observation` - Linear parameter for progressive widening of the number of observation nodes. default: 10.0
+- `alpha_action` - Exponent parameter for progressive widening of the number of action nodes. default: 0.5
+- `k_action` - Linear parameter for progressive widening of the number of observation nodes. default: 10.0
+- `gen` - `ActionGenerator` for specifiying which new action should be tried when the node is widened. See MCTS.jl for the `ActionGenerator` definition
+
+For more information on the k and alpha parameters, see Couëtoux, A., Hoock, J.-B., Sokolovska, N., Teytaud, O., & Bonnard, N. (2011). Continuous Upper Confidence Trees. In Learning and Intelligent Optimization. Rome, Italy. Retrieved from http://link.springer.com/chapter/10.1007/978-3-642-25566-3_32
 """
 function POMCPDPWSolver(;eps=0.01,
                       max_depth=typemax(Int),

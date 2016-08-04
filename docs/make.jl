@@ -1,6 +1,6 @@
 using Documenter, POMCP
 
-makedocs(modules=POMCP)
+makedocs(modules=[POMCP])
 
 deploydocs(
     repo = "github.com/JuliaPOMDP/POMCP.jl.git",
