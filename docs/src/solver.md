@@ -1,7 +1,11 @@
 # Solver
 
-Solver Options are controlled through the POMCPSolver keyword constructor:
+Solver options are controlled through the solver keyword constructor:
 
 ```@docs
 POMCPSolver(;kwargs...)
+```
+
+```@docs
+POMCPDPWSolver()
 ```

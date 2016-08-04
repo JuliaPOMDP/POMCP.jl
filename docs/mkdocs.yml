@@ -23,4 +23,5 @@ pages:
   - Home: index.md
   - Solver: solver.md
   - Methods: methods.md
+  - Beliefs: beliefs.md
   - Visualization: visualization.md
