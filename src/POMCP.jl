@@ -64,6 +64,9 @@ type POMCPSolver <: POMDPs.Solver
     num_sparse_actions::Int # = 0 or less if not used
 end
 
+"""
+The POMCP Double Progressive Widening solver type. Holds all the parameters
+"""
 type POMCPDPWSolver <: POMDPs.Solver
     eps::Float64 # will stop simulations when discount^depth is less than this
     max_depth::Int
@@ -75,8 +78,6 @@ type POMCPDPWSolver <: POMDPs.Solver
     value_estimate_method::Symbol # :rollout or :value
     rollout_solver::Union{POMDPs.Solver, POMDPs.Policy}
 
-    num_sparse_actions::Int # = 0 or less if not used
-    # DPW stuff
     alpha_observation::Float64
     k_observation::Float64
     alpha_action::Float64
