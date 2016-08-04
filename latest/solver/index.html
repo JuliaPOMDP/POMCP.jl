@@ -142,7 +142,7 @@
 <li><code>tree_queries</code> - Number of nodes created in the tree per action decision.</li>
 <li><code>rng</code> - Random number generator.</li>
 <li><code>node_belief_updater</code> - A <code>POMDPs.Updater</code> to be used to update the belief in the nodes of the belief tree. By default the particle filter described in the paper will be used.</li>
-<li><code>value_estimate_method</code> - Either <code>:value</code> to use the <code>POMDPs.value()</code> function or <code>rollout</code> to use a rollout simulation.</li>
+<li><code>value_estimate_method</code> - Either <code>:value</code> to use the <code>POMDPs.value()</code> function or <code>:rollout</code> to use a rollout simulation.</li>
 <li><code>rollout_solver</code> - This should be a <code>POMDPs.Solver</code> or <code>POMDPs.Policy</code> that will be used in rollout simulations. If it is a <code>Solver</code>, <code>solve</code> will be called to determine the rollout policy. By default a random policy is used.</li>
 <li><code>num_sparse_actions</code> - If only a limited number of actions are to be considered, set this. If it is 0, all actions will be considered.</li>
 </ul>
