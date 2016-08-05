@@ -89,13 +89,6 @@
     </li>
 <li>
           
-            <li>
-    <li class="toctree-l1 ">
-        <a class="" href="visualization/">Visualization</a>
-        
-    </li>
-<li>
-          
         </ul>
       </div>
       &nbsp;
@@ -142,10 +135,18 @@
 <p>See <a href="https://github.com/JuliaPOMDP/POMCP.jl/blob/master/README.md">README.md</a> on the <a href="https://github.com/JuliaPOMDP/POMCP.jl">Github repo</a>.</p>
 <p><a id='Documentation-1'></a></p>
 <h2 id="documentation">Documentation</h2>
+<p><a id='Basics-1'></a></p>
+<h3 id="basics">Basics</h3>
 <p>This implementation of the POMCP solver may be used to solve POMDPs defined according to the <a href="https://github.com/sisl/POMDPs.jl">POMDPs.jl</a> interface. Note that this is an online solver, so the computation is carried out as the simulation is running (simulations take a long time, but <code>solve</code> takes no time).</p>
 <p>For a usage example, see the <a href="https://github.com/sisl/POMCP.jl/blob/master/notebooks/Basic_Usage.ipynb">Basic Usage</a> notebook. For some more (poorly documented) examples, see the <a href="https://github.com/sisl/POMCP.jl/blob/master/notebooks/Sanity_Checks.ipynb">Sanity Checks</a> notebook.</p>
 <p>Behavior is controlled through two mechanisms: <a href="solver/#Solver-1">solver options</a> and <a href="methods/#Methods-1">method specializations</a>.</p>
-<p>There is also an interactive <a href="visualization/#Tree-1">search tree visualizer</a>.</p>
+<p><a id='Belief-Updates-1'></a></p>
+<h3 id="belief-updates">Belief Updates</h3>
+<p>By default, POMCP uses an unweighted particle filter for belief updates as discussed in the original paper describing it. However, this implementation can use any Updater to keep track of the belief. A notebook describing the various belief updater options and features can be viewed here: <a href="http://nbviewer.jupyter.org/github/JuliaPOMDP/POMCP.jl/blob/master/notebooks/Belief_and_Particle_Filter_Options.ipynb">http://nbviewer.jupyter.org/github/JuliaPOMDP/POMCP.jl/blob/master/notebooks/Belief_and_Particle_Filter_Options.ipynb</a></p>
+<p><a id='Tree-1'></a></p>
+<h3 id="tree-visualization">Tree Visualization</h3>
+<p>Interactive visualization of the POMCP tree is available in Jupyter notebooks. Run the Display Tree notebook in the notebooks folder for a demonstration, or view it here: <a href="http://nbviewer.jupyter.org/github/JuliaPOMDP/POMCP.jl/blob/master/notebooks/Display_Tree.ipynb">http://nbviewer.jupyter.org/github/JuliaPOMDP/POMCP.jl/blob/master/notebooks/Display_Tree.ipynb</a></p>
+<p>In order to display a tree, create a POMCPTreeVisualizer with any BeliefNode. If the last line of a cell in a Jupyter notebook returns a POMCPTreeVisualizer, the output cell will be populated with html and javascript that display the tree. See the documentation for MCTS.jl for more detailed information about the tree and instructions describing how to customize its appearance. In particular, the <code>node_tag</code> and <code>tooltip_tag</code> functions can be overridden to customize how actions and observations are displayed.</p>
               
             </div>
           </div>
@@ -193,5 +194,5 @@
 
 <!--
 MkDocs version : 0.15.3
-Build Date UTC : 2016-08-04 22:01:28.338958
+Build Date UTC : 2016-08-05 00:00:28.580081
 -->
