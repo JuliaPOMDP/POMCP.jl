@@ -73,8 +73,8 @@ end
 function Base.show(f::IO, ::MIME"text/html", visualizer::POMCPTreeVisualizer)
     json, root_id = create_json(visualizer)
     # write("/tmp/tree_dump.json", json)
-    css = readstring(joinpath(Pkg.dir("MCTS"), "src", "tree_vis.css"))
-    js = readstring(joinpath(Pkg.dir("MCTS"), "src", "tree_vis.js"))
+    css = @compat readstring(joinpath(Pkg.dir("MCTS"), "src", "tree_vis.css"))
+    js = @compat readstring(joinpath(Pkg.dir("MCTS"), "src", "tree_vis.js"))
     div = "treevis$(randstring())"
 
     html_string = """
