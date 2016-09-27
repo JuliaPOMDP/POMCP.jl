@@ -1,12 +1,11 @@
 import JSON
-import Base: writemime
 import MCTS: node_tag, tooltip_tag
 
 type POMCPTreeVisualizer
     node::BeliefNode
 end
 
-typealias NodeDict Dict{Int, Dict{UTF8String, Any}}
+typealias NodeDict Dict{Int, Dict{String, Any}}
 
 function create_json(v::POMCPTreeVisualizer)
     complete = false
@@ -71,11 +70,11 @@ function recursive_push!(nd::NodeDict, n::ActNode, parent_id=-1)
     return nd
 end
 
-function writemime(f::IO, ::MIME"text/html", visualizer::POMCPTreeVisualizer)
+function Base.show(f::IO, ::MIME"text/html", visualizer::POMCPTreeVisualizer)
     json, root_id = create_json(visualizer)
     # write("/tmp/tree_dump.json", json)
-    css = readall(joinpath(Pkg.dir("MCTS"), "src", "tree_vis.css"))
-    js = readall(joinpath(Pkg.dir("MCTS"), "src", "tree_vis.js"))
+    css = readstring(joinpath(Pkg.dir("MCTS"), "src", "tree_vis.css"))
+    js = readstring(joinpath(Pkg.dir("MCTS"), "src", "tree_vis.js"))
     div = "treevis$(randstring())"
 
     html_string = """

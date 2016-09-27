@@ -11,4 +11,4 @@ belief = initialize_belief(up, initial_state_distribution(problem))
 action(policy, belief)
 
 dummy = IOBuffer()
-writemime(dummy, MIME("text/html"), POMCPTreeVisualizer(belief))
+show(dummy, MIME("text/html"), POMCPTreeVisualizer(belief))

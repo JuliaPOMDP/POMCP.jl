@@ -5,6 +5,8 @@ using POMDPModels
 using POMDPs
 using POMDPToolbox
 
+using NBInclude
+
 POMCP.required_methods()
 
 pc = ParticleCollection([1,2])
@@ -34,5 +36,7 @@ solver = POMCPDPWSolver(tree_queries=100)
 test_solver(solver,BabyPOMDP())
 
 include("visualization.jl")
+nbinclude("../notebooks/Display_Tree.ipynb")
 
+nbinclude("../notebooks/Basic_Usage.ipynb")
 include("Belief_and_Particle_Filter_Options.jl")
