@@ -11,6 +11,8 @@ import GenerativeModels
 import StatsBase: WeightVec, sample
 import MCTS: ActionGenerator, RandomActionGenerator
 
+using Compat
+
 export
     POMCPSolver,
     POMCPDPWSolver,
