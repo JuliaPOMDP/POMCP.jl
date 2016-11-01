@@ -11,8 +11,6 @@ import GenerativeModels
 import StatsBase: WeightVec, sample
 import MCTS: ActionGenerator, RandomActionGenerator
 
-using Compat
-
 export
     POMCPSolver,
     POMCPDPWSolver,
@@ -80,6 +78,8 @@ type POMCPDPWSolver <: POMDPs.Solver
     value_estimate_method::Symbol # :rollout or :value
     rollout_solver::Union{POMDPs.Solver, POMDPs.Policy}
 
+    enable_action_pw::Bool
+
     alpha_observation::Float64
     k_observation::Float64
     alpha_action::Float64
@@ -113,7 +113,7 @@ include("visualization.jl")
 """
 Return a list of methods required to use POMCP
 """
-function required_methods() 
+function required_methods()
     return [
         POMDPs.iterator,
         POMDPs.actions,
