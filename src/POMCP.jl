@@ -9,7 +9,7 @@ import POMDPs: update, updater, create_belief, initialize_belief, AbstractSpace
 import POMDPToolbox
 import GenerativeModels
 import StatsBase: WeightVec, sample
-import MCTS: ActionGenerator, RandomActionGenerator
+import MCTS: ActionGenerator, RandomActionGenerator, next_action
 
 using Compat
 
