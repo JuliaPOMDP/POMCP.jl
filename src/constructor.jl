@@ -47,6 +47,7 @@ POMCPSolver properties are:
 - `node_belief_updater` - A `POMDPs.Updater` to be used to update the belief in the nodes of the belief tree. By default the particle filter described in the paper will be used.
 - `value_estimate_method` - Either `:value` to use the `POMDPs.value()` function or `:rollout` to use a rollout simulation.
 - `rollout_solver` - This should be a `POMDPs.Solver` or `POMDPs.Policy` that will be used in rollout simulations. If it is a `Solver`, `solve` will be called to determine the rollout policy. By default a random policy is used.
+- `enable_action_pw` - Enable or not the prograssive widening of the number of action node. default: true
 - `alpha_observation` - Exponent parameter for progressive widening of the number of observation nodes. default: 0.5
 - `k_observation` - Linear parameter for progressive widening of the number of observation nodes. default: 10.0
 - `alpha_action` - Exponent parameter for progressive widening of the number of action nodes. default: 0.5
@@ -63,6 +64,7 @@ function POMCPDPWSolver(;eps=0.01,
                       node_belief_updater=DefaultReinvigoratorStub(),
                       value_estimate_method=:rollout,
                       rollout_solver=POMDPToolbox.RandomSolver(),
+                      enable_action_pw=true,
                       alpha_observation::Float64=0.5,
                       k_observation::Float64=10.,
                       alpha_action::Float64=0.5,
@@ -77,6 +79,7 @@ function POMCPDPWSolver(;eps=0.01,
                        node_belief_updater,
                        value_estimate_method,
                        rollout_solver,
+                       enable_action_pw,
                        alpha_observation,
                        k_observation,
                        alpha_action,

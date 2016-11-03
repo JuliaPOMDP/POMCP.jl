@@ -148,21 +148,41 @@ function simulate{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,B,POMCPDPWSolver}, h::Belie
     end
 
     total_N = reduce(add_N, 0, values(h.children))
-    if length(h.children) <= pomcp.solver.k_action*total_N^pomcp.solver.alpha_action
-        a = next_action(pomcp.solver.gen, pomcp.problem, s, h)
-        if !(a in keys(h.children))
-            h.children[a] = ActNode(a,
-                                    init_N(pomcp.problem, h, a),
-                                    init_V(pomcp.problem, h, a),
-                                    Dict{O,ObsNode{B,A,O}}())
+    if pomcp.solver.enable_action_pw
+        if length(h.children) <= pomcp.solver.k_action*total_N^pomcp.solver.alpha_action
+            a = next_action(pomcp.solver.gen, pomcp.problem, s, h)
+            if !(a in keys(h.children))
+                h.children[a] = ActNode(a,
+                                        init_N(pomcp.problem, h, a),
+                                        init_V(pomcp.problem, h, a),
+                                        Dict{O,ObsNode{B,A,O}}())
+            end
+            if length(h.children) <= 1
+                if depth > 0
+                    return POMDPs.discount(pomcp.problem)^depth * estimate_value(pomcp, pomcp.problem, s, h, depth)
+                else
+                    return 0.
+                end
+            end
         end
-        if length(h.children) <= 1
-            if depth > 0
+    else # run through all the actions
+        if isempty(h.children)
+            action_space_iter = POMDPs.iterator(POMDPs.actions(pomcp.problem))
+            h.children = Dict{Any,ActNode}()
+            for a in action_space_iter
+                h.children[a] = ActNode(a,
+                                        init_N(pomcp.problem, h, a),
+                                        init_V(pomcp.problem, h, a),
+                                        Dict{O,ObsNode{B,A,O}}())
+            end
+
+            if depth > 0 # no need for a rollout if this is the root node
                 return POMDPs.discount(pomcp.problem)^depth * estimate_value(pomcp, pomcp.problem, s, h, depth)
             else
                 return 0.
             end
         end
+        total_N = h.N
     end
 
     # Calculate UCT
@@ -198,7 +218,7 @@ function simulate{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,B,POMCPDPWSolver}, h::Belie
             end
             best_node.children[o] = hao
         end
-        
+
     else
         state_was_generated = false
         # otherwise sample nodes
@@ -229,4 +249,3 @@ Add the N's of two nodes - for use in reduce
 """
 add_N(a::ActNode, b::ActNode) = a.N + b.N
 add_N(a::Int, b::ActNode) = a + b.N
-

@@ -31,8 +31,17 @@ solver = POMCPSolver(rollout_solver=FeedWhenCrying(),
 
 @test_throws ErrorException test_solver(solver, BabyPOMDP(), max_steps=100)
 
+# test for DPW
 solver = POMCPDPWSolver(tree_queries=100)
 
+test_solver(solver,BabyPOMDP())
+
+# test for enable/disable action pw
+solver = POMCPDPWSolver(tree_queries=100,
+                     eps=0.01,
+                     c=10.0,
+                     enable_action_pw=false,
+                     rng =MersenneTwister(2))
 test_solver(solver,BabyPOMDP())
 
 include("visualization.jl")
