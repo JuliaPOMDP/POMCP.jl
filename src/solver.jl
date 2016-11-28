@@ -222,8 +222,8 @@ function simulate{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,B,POMCPDPWSolver}, h::Belie
     else
         state_was_generated = false
         # otherwise sample nodes
-        os = collect(values(best_node.children)) # XXX allocation
-        wv = WeightVec(Int[node.N for node in os]) # XXX allocation
+        os = values(best_node.children)
+        wv = WeightVec(Int[node.N for node in os]) # allocation
         hao = sample(pomcp.solver.rng, os, wv)
         sp = rand(pomcp.solver.rng, hao.B)
         r = POMDPs.reward(pomcp.problem, s, a, sp)

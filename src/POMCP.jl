@@ -64,8 +64,7 @@ type POMCPSolver <: POMDPs.Solver
     rollout_solver::Union{POMDPs.Solver, POMDPs.Policy}
 
     num_sparse_actions::Int # = 0 or less if not used
-end
-
+end 
 """
 The POMCP Double Progressive Widening solver type. Holds all the parameters
 """
