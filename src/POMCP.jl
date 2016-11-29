@@ -115,6 +115,7 @@ include("visualization.jl")
 Return a list of methods required to use POMCP
 """
 function required_methods()
+    println("Note: iterator is not needed for the DPW solver, but rand is needed instead")
     return [
         POMDPs.iterator,
         POMDPs.actions,
