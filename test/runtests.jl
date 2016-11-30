@@ -42,7 +42,8 @@ solver = POMCPDPWSolver(tree_queries=100,
                      c=10.0,
                      enable_action_pw=false,
                      rng =MersenneTwister(2))
-test_solver(solver,BabyPOMDP())
+test_solver(solver, BabyPOMDP())
+# test_solver(solver, LightDark1D())
 
 include("visualization.jl")
 nbinclude("../notebooks/Display_Tree.ipynb")

@@ -8,7 +8,6 @@ corresponding to the observation. That way, all the information from the tree is
 type RootUpdater{U<:POMDPs.Updater} <: POMDPs.Updater{BeliefNode}
     node_belief_updater::U # updates the belief between nodes if necessary
 end
-RootUpdater{U<:POMDPs.Updater}(node_belief_updater::U) = RootUpdater{U}(node_belief_updater)
 
 # version with a particle reinvigorator
 function update{R<:ParticleReinvigorator,A,O}(updater::RootUpdater{R}, b_old::BeliefNode, a::A, o::O, b=nothing)
@@ -43,7 +42,7 @@ updater(policy::POMCPPlanner) = RootUpdater(policy.node_belief_updater)
 create_belief(updater::RootUpdater) = RootNode(0, create_belief(updater.node_belief_updater), Dict{Any,ActNode}())
 create_belief{R<:ParticleReinvigorator}(updater::RootUpdater{R}) = RootNode(0, nothing, Dict{Any,ActNode}())
 
-initialize_belief(up::RootUpdater, b::POMDPs.AbstractDistribution, new_belief::BeliefNode=RootNode(b)) = new_belief
+initialize_belief(up::RootUpdater, b::POMDPs.AbstractDistribution, new_belief::BeliefNode) = new_belief
 initialize_belief(up::RootUpdater, b::POMDPs.AbstractDistribution) = RootNode(0, b, Dict{Any,ActNode}())
 initialize_belief(up::RootUpdater, b::Any) = RootNode(0, b, Dict{Any,ActNode}())
 initialize_belief(::RootUpdater, n::RootNode, ::ObsNode) = n
