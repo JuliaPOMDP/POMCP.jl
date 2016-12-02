@@ -49,7 +49,6 @@ include("visualization.jl")
 nbinclude("../notebooks/Display_Tree.ipynb")
 
 nbinclude("../notebooks/Basic_Usage.ipynb")
-begin
-    nbinclude("../notebooks/Minimal_Example.ipynb")
-end
+nbinclude("../notebooks/Minimal_Example.ipynb")
+
 include("Belief_and_Particle_Filter_Options.jl")
