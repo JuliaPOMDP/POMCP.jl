@@ -2,18 +2,7 @@
 # replace recursion with while loop
 # cache simulation results
 
-create_policy(s::Union{POMCPSolver,POMCPDPWSolver}, p::POMDPs.POMDP) = solve(s,p)
-
-function action(policy::POMCPPlanner, belief, a=nothing)
-    return search(policy, belief, policy.solver.tree_queries)
-end
-
-"""
-    solve(solver::POMCPSolver, pomdp::POMDPs.POMDP)
-
-Simply return a properly constructed POMCPPlanner object.
-"""
-function solve{S}(solver::Union{POMCPSolver,POMCPDPWSolver}, pomdp::POMDPs.POMDP{S})
+function create_policy{S}(solver::Union{POMCPSolver,POMCPDPWSolver}, pomdp::POMDPs.POMDP{S})
     if isa(solver.rollout_solver, POMDPs.Policy)
         rollout_policy = solver.rollout_solver
     else
@@ -28,7 +17,20 @@ function solve{S}(solver::Union{POMCPSolver,POMCPDPWSolver}, pomdp::POMDPs.POMDP
     return POMCPPlanner(pomdp, solver, node_belief_updater, rollout_policy, rollout_updater, Nullable{Any}())
 end
 
-solve(solver::Union{POMCPSolver,POMCPDPWSolver}, pomdp::POMDPs.POMDP, dummy_policy) = solve(solver, pomdp)
+function action(policy::POMCPPlanner, belief, a=nothing)
+    return search(policy, belief, policy.solver.tree_queries)
+end
+
+"""
+    solve(solver::POMCPSolver, pomdp::POMDPs.POMDP)
+
+Simply return a properly constructed POMCPPlanner object.
+"""
+function solve{S}(solver::Union{POMCPSolver,POMCPDPWSolver}, pomdp::POMDPs.POMDP{S})
+    create_policy(solver, pomdp)
+end
+
+solve(solver::Union{POMCPSolver,POMCPDPWSolver}, pomdp::POMDPs.POMDP, dummy_policy::Any) = solve(solver, pomdp)
 
 """
     function search(pomcp::POMCPPlanner, b::BeliefNode, tree_queries)
