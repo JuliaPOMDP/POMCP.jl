@@ -193,6 +193,8 @@ function simulate{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,B,POMCPDPWSolver}, h::Belie
     for (a,node) in h.children
         if node.N == 0 && total_N <= 1
             criterion_value = node.V
+        elseif node.N == 0 && node.V == -Inf
+            criterion_value = Inf
         else
             criterion_value = node.V + pomcp.solver.c*sqrt(log(total_N)/node.N)
         end
