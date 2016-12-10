@@ -50,7 +50,7 @@ nbinclude("../notebooks/Display_Tree.ipynb")
 
 nbinclude("../notebooks/Basic_Usage.ipynb")
 
-warn("REMEMBER TO PUT MINIMAL_EXAMPLE BACK IN TESTS WHEN POMDPs IS UPDATED")
-# nbinclude("../notebooks/Minimal_Example.ipynb")
+# warn("REMEMBER TO PUT MINIMAL_EXAMPLE BACK IN TESTS WHEN POMDPs IS UPDATED")
+nbinclude("../notebooks/Minimal_Example.ipynb")
 
 include("Belief_and_Particle_Filter_Options.jl")

@@ -102,6 +102,8 @@ function simulate{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,B,POMCPSolver}, h::BeliefNo
     for node in values(h.children)
         if node.N == 0 && h.N == 1
             criterion_value = node.V
+        elseif node.N == 0 && node.V == -Inf
+            criterion_value = Inf
         else
             criterion_value = node.V + pomcp.solver.c*sqrt(log(h.N)/node.N)
         end
@@ -113,6 +115,10 @@ function simulate{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,B,POMCPSolver}, h::BeliefNo
     a = best_node.label
 
     (sp, o, r) = GenerativeModels.generate_sor(pomcp.problem, s, a, pomcp.solver.rng)
+
+    if r == Inf
+        warn("POMCP: +Inf reward. This is not recommended and may cause future errors.")
+    end
 
     if haskey(best_node.children, o)
         hao = best_node.children[o]
@@ -134,7 +140,9 @@ function simulate{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,B,POMCPSolver}, h::BeliefNo
     hao.N += 1
 
     best_node.N += 1
-    best_node.V += (R-best_node.V)/best_node.N
+    if best_node.V != -Inf
+        best_node.V += (R-best_node.V)/best_node.N
+    end
 
     return R
 end
@@ -211,6 +219,11 @@ function simulate{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,B,POMCPDPWSolver}, h::Belie
         # observation progressive widening
         (sp, o, r) = GenerativeModels.generate_sor(pomcp.problem, s, a, pomcp.solver.rng)
 
+        if r == Inf
+            warn("POMCP: +Inf reward. This is not recommended and may cause future errors.")
+        end
+
+
         if haskey(best_node.children, o)
             hao = best_node.children[o]
         else
@@ -243,7 +256,9 @@ function simulate{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,B,POMCPDPWSolver}, h::Belie
     end
 
     best_node.N += 1
-    best_node.V += (R-best_node.V)/best_node.N
+    if best_node.V != -Inf
+        best_node.V += (R-best_node.V)/best_node.N
+    end
 
     return R
 end
