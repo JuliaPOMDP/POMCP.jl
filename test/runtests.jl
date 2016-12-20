@@ -7,8 +7,6 @@ using POMDPToolbox
 
 using NBInclude
 
-POMCP.required_methods()
-
 pc = ParticleCollection([1,2])
 
 solver = POMCPSolver(rollout_solver=FeedWhenCrying(),

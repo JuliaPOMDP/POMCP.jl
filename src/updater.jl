@@ -42,10 +42,9 @@ updater(policy::POMCPPlanner) = RootUpdater(policy.node_belief_updater)
 create_belief(updater::RootUpdater) = RootNode(0, create_belief(updater.node_belief_updater), Dict{Any,ActNode}())
 create_belief{R<:ParticleReinvigorator}(updater::RootUpdater{R}) = RootNode(0, nothing, Dict{Any,ActNode}())
 
-initialize_belief(up::RootUpdater, b::POMDPs.AbstractDistribution, new_belief::BeliefNode) = new_belief
-initialize_belief(up::RootUpdater, b::POMDPs.AbstractDistribution) = RootNode(0, b, Dict{Any,ActNode}())
-initialize_belief(up::RootUpdater, b::Any) = RootNode(0, b, Dict{Any,ActNode}())
-initialize_belief(::RootUpdater, n::RootNode, ::ObsNode) = n
+initialize_belief(up::RootUpdater, b, new_belief::BeliefNode) = new_belief
+initialize_belief(up::RootUpdater, b) = RootNode(0, b, Dict{Any,ActNode}())
+initialize_belief(::RootUpdater, n::RootNode) = n
 
 function rand(rng::AbstractRNG, d::BeliefNode, s)
     rand(rng, d.B, s)

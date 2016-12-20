@@ -1,7 +1,7 @@
 """
 Belief represented by an unweighted collection of particles
 """
-type ParticleCollection{S} <: POMDPs.AbstractDistribution{S}
+type ParticleCollection{S}
     particles::Vector{S}
     ParticleCollection(particles) = new(particles)
     ParticleCollection() = new(S[])

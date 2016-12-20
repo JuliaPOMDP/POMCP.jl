@@ -3,9 +3,9 @@ module POMCP
 
 import POMDPs
 
-import POMDPs: action, solve, create_policy
+import POMDPs: action, solve
 import Base.rand
-import POMDPs: update, updater, create_belief, initialize_belief, AbstractSpace
+import POMDPs: update, updater, initialize_belief
 import POMDPToolbox
 import GenerativeModels
 import StatsBase: WeightVec, sample
@@ -110,20 +110,5 @@ include("actions.jl")
 include("rollout.jl")
 include("solver.jl")
 include("visualization.jl")
-
-"""
-Return a list of methods required to use POMCP
-"""
-function required_methods()
-    println("Note: iterator is not needed for the DPW solver, but rand is needed instead")
-    return [
-        POMDPs.iterator,
-        POMDPs.actions,
-        POMDPs.isterminal,
-        POMDPs.discount,
-        GenerativeModels.generate_sor
-    ]
-end
-# optional: POMDPs.value
 
 end # module
