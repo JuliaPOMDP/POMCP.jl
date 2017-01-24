@@ -1,18 +1,37 @@
 """
-    estimate_value(pomcp::POMCPPlanner, problem::POMDPs.POMDP, start_state, h::BeliefNode)
+    estimate_value(estimator, problem::POMDPs.POMDP, start_state, h::BeliefNode, depth::Int)
 
 Return an initial unbiased estimate of the value at belief node h.
 
 By default this runs a rollout simulation
 """
-function estimate_value(pomcp::POMCPPlanner, problem::POMDPs.POMDP, start_state, h::BeliefNode, depth::Int)
-    if pomcp.solver.value_estimate_method == :value
-        return POMDPs.value(pomcp.solver.rollout_policy, h.B) # this does not seem right because it needs to be given the start state
-    elseif pomcp.solver.value_estimate_method == :rollout
-        return rollout(pomcp, start_state, h, depth)
-    else
-        error("POMCPSolver.value_estimate_method should be :value or :rollout (it was $(pomcp.solver.value_estimate_method)).")
-    end
+function estimate_value end
+estimate_value(f::Function, pomdp::POMDPs.POMDP, start_state, h::BeliefNode, d::Int) = f(pomdp, start_state, h, steps)
+estimate_value(n::Number, pomdp::POMDPs.POMDP, start_state, h::BeliefNode, d::Int) = convert(Float64, n)
+
+type PORolloutEstimator
+    solver::Union{POMDPs.Solver,POMDPs.Policy,Function}
+    updater::POMDPs.Updater
+end
+
+type SolvedPORolloutEstimator
+    policy::POMDPs.Policy
+    updater::POMDPs.Updater
+    rng::AbstractRNG
+end
+
+convert_estimator(ev::Any, solver::AbstractPOMCPSolver, pomdp::POMDPs.POMDP) = ev
+function convert_estimator(ev::RolloutEstimator, solver::AbstractPOMCPSolver, pomdp::POMDPs.POMDP)
+    policy = convert_to_policy(ev.solver, pomdp)
+    SolvedPORolloutEstimator(policy, updater(policy), solver.rng)
+end
+function convert_estimator(ev::PORolloutEstimator, solver::AbstractPOMCPSolver, pomdp::POMDPs.POMDP)
+    policy = convert_to_policy(ev.solver, pomdp)
+    SolvedPORolloutEstimator(policy, ev.updater, solver.rng)
+end
+
+function estimate_value(estimator::SolvedPORolloutEstimator, pomdp::POMDPs.POMDP, start_state, h::BeliefNode, steps::Int)
+    rollout(estimator, pomdp, start_state, h, steps)
 end
 
 """
@@ -20,19 +39,12 @@ end
 
 Perform a rollout simulation to estimate the value.
 """
-function rollout(pomcp::POMCPPlanner, start_state, h::BeliefNode, depth::Int)
-    b = extract_belief(pomcp.rollout_updater, h)
-    sim = POMDPToolbox.RolloutSimulator(rng=pomcp.solver.rng,
-                                        eps=pomcp.solver.eps/POMDPs.discount(pomcp.problem)^depth,
-                                        max_steps=pomcp.solver.max_depth-depth,
+function rollout(est::SolvedPORolloutEstimator, pomdp::POMDPs.POMDP, start_state, h::BeliefNode, steps::Int)
+    b = extract_belief(est.updater, h)
+    sim = POMDPToolbox.RolloutSimulator(rng=est.rng,
+                                        max_steps=steps,
                                         initial_state=start_state)
-    r = POMDPs.simulate(sim,
-                        pomcp.problem,
-                        pomcp.rollout_policy,
-                        pomcp.rollout_updater,
-                        b)
-    # h.N += 1 # this does not seem to be in the paper. Is it right?
-    return r
+    return POMDPs.simulate(sim, pomdp, est.policy, est.updater, b)
 end
 
 """

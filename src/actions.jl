@@ -30,6 +30,7 @@ end
 """
 Generate a new action when the set of actions is widened.
 """
-function next_action(gen::RandomActionGenerator, mdp::POMDPs.POMDP, b, snode::BeliefNode)
+function next_action(gen::RandomActionGenerator, mdp::POMDPs.POMDP, b, hnode::BeliefNode)
     rand(gen.rng, POMDPs.actions(mdp, b))
 end
+next_action(f::Function, pomdp::POMDPs.POMDP, b, hnode::BeliefNode) = f(pomdp, s, snode)

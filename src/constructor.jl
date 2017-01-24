@@ -1,26 +1,19 @@
 """
-Constructor for the POMCP Solver
+Constructor for the POMCPSolver.
 
-POMCPSolver properties are:
+Use keyword arguments to specify any field values.
 
-- `eps` - Rollout simulations are terminated once the discount factor raised to the current step power is below this (see paper). default: 0.01
-- `max_depth` - Rollout simulations and tree expansion are terminated at this depth. default: typemax(Int)
-- `c` - UCB tuning parameter (see paper). default: 1
-- `tree_queries` - Number of nodes created in the tree per action decision.
-- `rng` - Random number generator.
-- `node_belief_updater` - A `POMDPs.Updater` to be used to update the belief in the nodes of the belief tree. By default the particle filter described in the paper will be used.
-- `value_estimate_method` - Either `:value` to use the `POMDPs.value()` function or `:rollout` to use a rollout simulation.
-- `rollout_solver` - This should be a `POMDPs.Solver` or `POMDPs.Policy` that will be used in rollout simulations. If it is a `Solver`, `solve` will be called to determine the rollout policy. By default a random policy is used.
-- `num_sparse_actions` - If only a limited number of actions are to be considered, set this. If it is 0, all actions will be considered.
+For documentation of each field, see the docstring for the POMCPSolver type.
 """
 function POMCPSolver(;eps=0.01,
                       max_depth=typemax(Int),
                       c=1.,
                       tree_queries=100,
-                      rng=MersenneTwister(),
+                      rng=Base.GLOBAL_RNG,
                       node_belief_updater=DefaultReinvigoratorStub(),
-                      value_estimate_method=:rollout,
-                      rollout_solver=POMDPToolbox.RandomSolver(),
+                      estimate_value=RolloutEstimator(POMDPToolbox.RandomSolver()),
+                      init_V=0.0,
+                      init_N=0,
                       num_sparse_actions=0)
 
     return POMCPSolver(eps,
@@ -29,47 +22,34 @@ function POMCPSolver(;eps=0.01,
                        tree_queries,
                        rng,
                        node_belief_updater,
-                       value_estimate_method,
-                       rollout_solver,
+                       estimate_value,
+                       init_V,
+                       init_N,
                        num_sparse_actions)
 end
 
 """
-Constructor for the POMCP DPW Solver
+Constructor for the POMCPDPWSolver.
 
-POMCPSolver properties are:
+Use keyword arguments to specify any field values.
 
-- `eps` - Rollout simulations are terminated once the discount factor raised to the current step power is below this (see paper). default: 0.01
-- `max_depth` - Rollout simulations and tree expansion are terminated at this depth. default: typemax(Int)
-- `c` - UCB tuning parameter (see paper). default: 1
-- `tree_queries` - Number of nodes created in the tree per action decision.
-- `rng` - Random number generator.
-- `node_belief_updater` - A `POMDPs.Updater` to be used to update the belief in the nodes of the belief tree. By default the particle filter described in the paper will be used.
-- `value_estimate_method` - Either `:value` to use the `POMDPs.value()` function or `:rollout` to use a rollout simulation.
-- `rollout_solver` - This should be a `POMDPs.Solver` or `POMDPs.Policy` that will be used in rollout simulations. If it is a `Solver`, `solve` will be called to determine the rollout policy. By default a random policy is used.
-- `enable_action_pw` - Enable or not the prograssive widening of the number of action node. default: true
-- `alpha_observation` - Exponent parameter for progressive widening of the number of observation nodes. default: 0.5
-- `k_observation` - Linear parameter for progressive widening of the number of observation nodes. default: 10.0
-- `alpha_action` - Exponent parameter for progressive widening of the number of action nodes. default: 0.5
-- `k_action` - Linear parameter for progressive widening of the number of observation nodes. default: 10.0
-- `gen` - `ActionGenerator` for specifiying which new action should be tried when the node is widened. See MCTS.jl for the `ActionGenerator` definition
-
-For more information on the k and alpha parameters, see Couëtoux, A., Hoock, J.-B., Sokolovska, N., Teytaud, O., & Bonnard, N. (2011). Continuous Upper Confidence Trees. In Learning and Intelligent Optimization. Rome, Italy. Retrieved from http://link.springer.com/chapter/10.1007/978-3-642-25566-3_32
+For documentation of each field, see the docstring for POMCPDPWSolver type.
 """
 function POMCPDPWSolver(;eps=0.01,
                       max_depth=typemax(Int),
                       c=1.,
                       tree_queries=100,
-                      rng=MersenneTwister(),
+                      rng=Base.GLOBAL_RNG,
                       node_belief_updater=DefaultReinvigoratorStub(),
-                      value_estimate_method=:rollout,
-                      rollout_solver=POMDPToolbox.RandomSolver(),
+                      estimate_value=RolloutEstimator(POMDPToolbox.RandomSolver()),
                       enable_action_pw=true,
                       alpha_observation::Float64=0.5,
                       k_observation::Float64=10.,
                       alpha_action::Float64=0.5,
                       k_action::Float64=10.,
-                      gen::ActionGenerator=RandomActionGenerator())
+                      init_V=0.0,
+                      init_N=0,
+                      next_action=RandomActionGenerator())
 
     return POMCPDPWSolver(eps,
                        max_depth,
@@ -77,12 +57,13 @@ function POMCPDPWSolver(;eps=0.01,
                        tree_queries,
                        rng,
                        node_belief_updater,
-                       value_estimate_method,
-                       rollout_solver,
+                       estimate_value,
                        enable_action_pw,
                        alpha_observation,
                        k_observation,
                        alpha_action,
                        k_action,
-                       gen)
+                       init_V,
+                       init_N,
+                       next_action)
 end

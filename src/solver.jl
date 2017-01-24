@@ -3,18 +3,14 @@
 # cache simulation results
 
 function create_policy{S}(solver::Union{POMCPSolver,POMCPDPWSolver}, pomdp::POMDPs.POMDP{S})
-    if isa(solver.rollout_solver, POMDPs.Policy)
-        rollout_policy = solver.rollout_solver
-    else
-        rollout_policy = solve(solver.rollout_solver, pomdp)
-    end
     if isa(solver.node_belief_updater, DefaultReinvigoratorStub)
         node_belief_updater = DeadReinvigorator{S}()
     else
         node_belief_updater = solver.node_belief_updater
     end
-    rollout_updater = updater(rollout_policy)
-    return POMCPPlanner(pomdp, solver, node_belief_updater, rollout_policy, rollout_updater, Nullable{Any}())
+    return POMCPPlanner(pomdp, solver, node_belief_updater,
+                        convert_estimator(solver.estimate_value, solver, pomdp),
+                        Nullable{Any}())
 end
 
 function action(policy::POMCPPlanner, belief, a=nothing)
@@ -75,23 +71,27 @@ Move the simulation forward a single step and update the BeliefNode h accordingl
 """
 function simulate{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,B,POMCPSolver}, h::BeliefNode, s::S, depth)
 
-    if POMDPs.discount(pomcp.problem)^depth < pomcp.solver.eps ||
+    sol = pomcp.solver
+
+    if POMDPs.discount(pomcp.problem)^depth < sol.eps ||
             POMDPs.isterminal(pomcp.problem, s) ||
-            depth >= pomcp.solver.max_depth
+            depth >= sol.max_depth
         return 0
     end
 	if isempty(h.children)
-        action_space_iter = sparse_actions(pomcp, pomcp.problem, h, pomcp.solver.num_sparse_actions)
+        action_space_iter = sparse_actions(pomcp, pomcp.problem, h, sol.num_sparse_actions)
 		h.children = Dict{Any,ActNode}()
 		for a in action_space_iter
 			h.children[a] = ActNode(a,
-                                    init_N(pomcp.problem, h, a),
-                                    init_V(pomcp.problem, h, a),
+                                    init_N(sol.init_N, pomcp.problem, h, a),
+                                    init_V(sol.init_V, pomcp.problem, h, a),
                                     Dict{O,ObsNode{B,A,O}}())
 		end
 
         if depth > 0 # no need for a rollout if this is the root node
-            return POMDPs.discount(pomcp.problem)^depth * estimate_value(pomcp, pomcp.problem, s, h, depth)
+            steps_to_eps = ceil(Int, log(sol.eps)/log(POMDPs.discount(pomcp.problem))-depth)
+            steps = min(sol.max_depth-depth, steps_to_eps)
+            return POMDPs.discount(pomcp.problem)^depth * estimate_value(pomcp.solved_estimate, pomcp.problem, s, h, steps)
         else
             return 0.
         end
@@ -105,7 +105,7 @@ function simulate{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,B,POMCPSolver}, h::BeliefNo
         elseif node.N == 0 && node.V == -Inf
             criterion_value = Inf
         else
-            criterion_value = node.V + pomcp.solver.c*sqrt(log(h.N)/node.N)
+            criterion_value = node.V + sol.c*sqrt(log(h.N)/node.N)
         end
         if criterion_value >= best_criterion_val
             best_criterion_val = criterion_value
@@ -114,7 +114,7 @@ function simulate{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,B,POMCPSolver}, h::BeliefNo
     end
     a = best_node.label
 
-    (sp, o, r) = GenerativeModels.generate_sor(pomcp.problem, s, a, pomcp.solver.rng)
+    (sp, o, r) = GenerativeModels.generate_sor(pomcp.problem, s, a, sol.rng)
 
     if r == Inf
         warn("POMCP: +Inf reward. This is not recommended and may cause future errors.")
@@ -151,25 +151,27 @@ end
 
 function simulate{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,B,POMCPDPWSolver}, h::BeliefNode, s::S, depth)
 
-    if POMDPs.discount(pomcp.problem)^depth < pomcp.solver.eps ||
+    sol = pomcp.solver
+
+    if POMDPs.discount(pomcp.problem)^depth < sol.eps ||
             POMDPs.isterminal(pomcp.problem, s) ||
-            depth >= pomcp.solver.max_depth
+            depth >= sol.max_depth
         return 0
     end
 
     total_N = reduce(add_N, 0, values(h.children))
-    if pomcp.solver.enable_action_pw
-        if length(h.children) <= pomcp.solver.k_action*total_N^pomcp.solver.alpha_action
-            a = next_action(pomcp.solver.gen, pomcp.problem, s, h)
+    if sol.enable_action_pw
+        if length(h.children) <= sol.k_action*total_N^sol.alpha_action
+            a = next_action(sol.next_action, pomcp.problem, s, h)
             if !(a in keys(h.children))
                 h.children[a] = ActNode(a,
-                                        init_N(pomcp.problem, h, a),
-                                        init_V(pomcp.problem, h, a),
+                                        init_N(sol.init_N, pomcp.problem, h, a),
+                                        init_V(sol.init_V, pomcp.problem, h, a),
                                         Dict{O,ObsNode{B,A,O}}())
             end
             if length(h.children) <= 1
                 if depth > 0
-                    return POMDPs.discount(pomcp.problem)^depth * estimate_value(pomcp, pomcp.problem, s, h, depth)
+                    return POMDPs.discount(pomcp.problem)^depth * estimate_value(pomcp.solved_estimate, pomcp.problem, s, h, depth)
                 else
                     return 0.
                 end
@@ -181,13 +183,13 @@ function simulate{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,B,POMCPDPWSolver}, h::Belie
             h.children = Dict{Any,ActNode}()
             for a in action_space_iter
                 h.children[a] = ActNode(a,
-                                        init_N(pomcp.problem, h, a),
-                                        init_V(pomcp.problem, h, a),
+                                        init_N(sol.init_N, pomcp.problem, h, a),
+                                        init_V(sol.init_V, pomcp.problem, h, a),
                                         Dict{O,ObsNode{B,A,O}}())
             end
 
             if depth > 0 # no need for a rollout if this is the root node
-                return POMDPs.discount(pomcp.problem)^depth * estimate_value(pomcp, pomcp.problem, s, h, depth)
+                return POMDPs.discount(pomcp.problem)^depth * estimate_value(pomcp.solved_estimate, pomcp.problem, s, h, depth)
             else
                 return 0.
             end
@@ -204,7 +206,7 @@ function simulate{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,B,POMCPDPWSolver}, h::Belie
         elseif node.N == 0 && node.V == -Inf
             criterion_value = Inf
         else
-            criterion_value = node.V + pomcp.solver.c*sqrt(log(total_N)/node.N)
+            criterion_value = node.V + sol.c*sqrt(log(total_N)/node.N)
         end
         if criterion_value >= best_criterion_val
             best_criterion_val = criterion_value
@@ -213,11 +215,11 @@ function simulate{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,B,POMCPDPWSolver}, h::Belie
     end
     a = best_node.label
 
-    if length(best_node.children) <= pomcp.solver.k_observation*(best_node.N^pomcp.solver.alpha_observation)
+    if length(best_node.children) <= sol.k_observation*(best_node.N^sol.alpha_observation)
         state_was_generated = true
 
         # observation progressive widening
-        (sp, o, r) = GenerativeModels.generate_sor(pomcp.problem, s, a, pomcp.solver.rng)
+        (sp, o, r) = GenerativeModels.generate_sor(pomcp.problem, s, a, sol.rng)
 
         if r == Inf
             warn("POMCP: +Inf reward. This is not recommended and may cause future errors.")
@@ -241,8 +243,8 @@ function simulate{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,B,POMCPDPWSolver}, h::Belie
         # otherwise sample nodes
         os = values(best_node.children)
         wv = WeightVec(Int[node.N for node in os]) # allocation
-        hao = sample(pomcp.solver.rng, os, wv)
-        sp = rand(pomcp.solver.rng, hao.B)
+        hao = sample(sol.rng, os, wv)
+        sp = rand(sol.rng, hao.B)
         r = POMDPs.reward(pomcp.problem, s, a, sp)
     end
 

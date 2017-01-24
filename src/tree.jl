@@ -25,19 +25,19 @@ end
 RootNode{RootBelief}(b::RootBelief) = RootNode{RootBelief}(0, b, Dict{Any,ActNode}())
 
 """
-    init_V(problem::POMDPs.POMDP, h::BeliefNode, action)
+    init_V(initializer, problem::POMDPs.POMDP, h::BeliefNode, action)
 
 Return the initial value (V) associated with a new action node when it is created. This can be used in concert with `init_N` to incorporate prior experience into the solver.
 """
-function init_V(problem::POMDPs.POMDP, h::BeliefNode, action)
-    return 0.0
-end
+function init_V end
+init_V(n::Number, problem::POMDPs.POMDP, h::BeliefNode, action) = convert(Float64, n)
+init_V(f::Function, problem::POMDPs.POMDP, h::BeliefNode, action) = f(problem, h, action)
 
 """
-    init_N(problem::POMDPs.POMDP, h::BeliefNode, action)
+    init_N(initializer, problem::POMDPs.POMDP, h::BeliefNode, action)
 
 Return the initial number of queries (N) associated with a new action node when it is created.
 """
-function init_N(problem::POMDPs.POMDP, h::BeliefNode, action)
-    return 0
-end
+function init_N end
+init_N(n::Number, problem::POMDPs.POMDP, h::BeliefNode, action) = convert(Int, n)
+init_N(f::Function, problem::POMDPs.POMDP, h::BeliefNode, action) = f(problem, h, action)

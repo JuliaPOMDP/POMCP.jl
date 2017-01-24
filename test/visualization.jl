@@ -1,4 +1,4 @@
-solver = POMCPSolver(rollout_solver=FeedWhenCrying(),
+solver = POMCPSolver(estimate_value=RolloutEstimator(FeedWhenCrying()),
                     eps=0.01,
                     c=10.0,
                     tree_queries=50, 

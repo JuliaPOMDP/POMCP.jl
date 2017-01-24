@@ -9,7 +9,7 @@ using NBInclude
 
 pc = ParticleCollection([1,2])
 
-solver = POMCPSolver(rollout_solver=FeedWhenCrying(),
+solver = POMCPSolver(estimate_value=RolloutEstimator(FeedWhenCrying()),
                     eps=0.01,
                     c=10.0,
                     tree_queries=50,
@@ -21,7 +21,7 @@ solver = POMCPSolver()
 test_solver(solver, BabyPOMDP())
 
 # test for particle depletion
-solver = POMCPSolver(rollout_solver=FeedWhenCrying(),
+solver = POMCPSolver(estimate_value=RolloutEstimator(FeedWhenCrying()),
                      eps=0.01,
                      c=10.0,
                      tree_queries=5,
@@ -48,7 +48,6 @@ nbinclude("../notebooks/Display_Tree.ipynb")
 
 nbinclude("../notebooks/Basic_Usage.ipynb")
 
-# warn("REMEMBER TO PUT MINIMAL_EXAMPLE BACK IN TESTS WHEN POMDPs IS UPDATED")
 nbinclude("../notebooks/Minimal_Example.ipynb")
 
 include("Belief_and_Particle_Filter_Options.jl")
