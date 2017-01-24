@@ -4,8 +4,5 @@ The following methods can be overridden to change the behavior of the solver:
 
 ```@docs
 extract_belief
-init_V
-init_N
 sparse_actions
-estimate_value
 ```

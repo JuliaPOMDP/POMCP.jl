@@ -3,9 +3,9 @@
 Solver options are controlled through the solver keyword constructor:
 
 ```@docs
-POMCPSolver(;kwargs...)
+POMCPSolver
 ```
 
 ```@docs
-POMCPDPWSolver()
+POMCPDPWSolver
 ```

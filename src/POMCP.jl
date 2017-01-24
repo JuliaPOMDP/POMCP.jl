@@ -174,7 +174,6 @@ Fields:
         or action will be added if the number of children is less than or equal to kN^alpha.
         defaults: k:10, alpha:0.5
 
-
     init_V::Any
         Function, object, or number used to set the initial V(h,a) value at a new node.
         If this is a function `f`, `f(pomdp, h, a)` will be called to set the value.
