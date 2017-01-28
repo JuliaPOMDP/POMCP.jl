@@ -1,5 +1,5 @@
 import JSON
-import MCTS: node_tag, tooltip_tag, blink
+import MCTS: AbstractTreeVisualizer, node_tag, tooltip_tag, create_json, blink
 
 type POMCPTreeVisualizer <: AbstractTreeVisualizer
     node::BeliefNode
