@@ -14,7 +14,12 @@ function create_policy{S}(solver::Union{POMCPSolver,POMCPDPWSolver}, pomdp::POMD
 end
 
 function action(policy::POMCPPlanner, belief, a=nothing)
-    return search(policy, belief, policy.solver.tree_queries)
+    try
+        a = search(policy, belief, policy.solver.tree_queries)
+    catch ex
+        a = default_action(policy.solver.default_action, belief, ex)
+    end
+    return a
 end
 
 """
@@ -42,19 +47,28 @@ function search{RootBelief}(pomcp::POMCPPlanner, belief::RootBelief, tree_querie
 end
 
 function search(pomcp::POMCPPlanner, b::BeliefNode, tree_queries)
-    #XXX hack
+    # XXX hack
     pomcp._tree_ref = b
     # end hack
 
+    all_terminal = true
     for i in 1:tree_queries
         s = rand(pomcp.solver.rng, b)
-        simulate(pomcp, b, s, 0)
-        b.N += 1
+        if !POMDPs.isterminal(pomcp.problem, s)
+            simulate(pomcp, b, s, 0)
+            b.N += 1
+            all_terminal = false
+        end
     end
 
-    best_V = -Inf
-    local best_node # guessing that type stability is not important enough to make a difference at this point
-    for node in values(b.children)
+    if all_terminal
+        throw(AllSamplesTerminal(b.B))
+    end
+
+    best_node = first(values(b.children))
+    best_V = best_node.V
+    @assert !isnan(best_V)
+    for node in collect(values(b.children))[2:end]
         if node.V >= best_V
             best_V = node.V
             best_node = node

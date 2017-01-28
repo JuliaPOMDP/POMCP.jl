@@ -46,11 +46,17 @@ export
     ParticleReinvigorator,
     reinvigorate!,
     handle_unseen_observation,
-    DefaultReinvigoratorStub
+    DefaultReinvigoratorStub,
+
+    NoDecision,
+    AllSamplesTerminal,
+    ExceptionRethrow,
+    default_action
 
 
 include("tree.jl")
 include("particle_filter.jl")
+include("exceptions.jl")
 
 abstract AbstractPOMCPSolver <: POMDPs.Solver
 
@@ -108,6 +114,13 @@ Fields:
         Number of actions to be considered at each node.
         If <= 0, the entire action space will be considered.
         default: 0
+
+    default_action::Any
+        Function, action, or Policy used to determine the action if POMCP fails with exception `ex`.
+        If this is a Function `f`, `f(belief, ex)` will be called.
+        If this is a Policy `p`, `action(p, belief)` will be called.
+        If it is an object `a`, `default_action(a, belief, ex) will be called, and
+        if this method is not implemented, `a` will be returned directly.
 """
 type POMCPSolver <: AbstractPOMCPSolver
     eps::Float64 # will stop simulations when discount^depth is less than this
@@ -123,6 +136,7 @@ type POMCPSolver <: AbstractPOMCPSolver
     init_N::Any
 
     num_sparse_actions::Int # = 0 or less if not used
+    default_action::Any
 end 
 
 """
@@ -168,8 +182,8 @@ Fields:
 
     k_action::Float64
     alpha_action::Float64
-    k_state::Float64
-    alpha_state::Float64
+    k_observation::Float64
+    alpha_observation::Float64
         These constants control the double progressive widening. A new observation
         or action will be added if the number of children is less than or equal to kN^alpha.
         defaults: k:10, alpha:0.5
@@ -195,6 +209,13 @@ Fields:
         If this is an object `o`, `next_action(o, pomdp, b, h)` will be called.
         default: RandomActionGenerator(rng)
 
+    default_action::Any
+        Function, action, or Policy used to determine the action if POMCP fails with exception `ex`.
+        If this is a Function `f`, `f(belief, ex)` will be called.
+        If this is a Policy `p`, `action(p, belief)` will be called.
+        If it is an object `a`, `default_action(a, belief, ex) will be called, and
+        if this method is not implemented, `a` will be returned directly.
+
 For more information on the k and alpha parameters, see Couëtoux, A., Hoock, J.-B., Sokolovska, N., Teytaud, O., & Bonnard, N. (2011). Continuous Upper Confidence Trees. In Learning and Intelligent Optimization. Rome, Italy. Retrieved from http://link.springer.com/chapter/10.1007/978-3-642-25566-3_32
 """
 type POMCPDPWSolver <: AbstractPOMCPSolver
@@ -216,6 +237,7 @@ type POMCPDPWSolver <: AbstractPOMCPSolver
     init_V::Any
     init_N::Any
     next_action::Any
+    default_action::Any
 end
 
 """

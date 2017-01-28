@@ -1,9 +1,11 @@
 import JSON
-import MCTS: node_tag, tooltip_tag
+import MCTS: node_tag, tooltip_tag, blink
 
-type POMCPTreeVisualizer
+type POMCPTreeVisualizer <: AbstractTreeVisualizer
     node::BeliefNode
 end
+
+blink(n::BeliefNode) = blink(POMCPTreeVisualizer(n))
 
 typealias NodeDict Dict{Int, Dict{String, Any}}
 
@@ -68,36 +70,4 @@ function recursive_push!(nd::NodeDict, n::ActNode, parent_id=-1)
         recursive_push!(nd, c, id)
     end
     return nd
-end
-
-function Base.show(f::IO, ::MIME"text/html", visualizer::POMCPTreeVisualizer)
-    json, root_id = create_json(visualizer)
-    # write("/tmp/tree_dump.json", json)
-    css = @compat readstring(joinpath(Pkg.dir("MCTS"), "src", "tree_vis.css"))
-    js = @compat readstring(joinpath(Pkg.dir("MCTS"), "src", "tree_vis.js"))
-    div = "treevis$(randstring())"
-
-    html_string = """
-        <div id="$div">
-        <style>
-            $css
-        </style>
-        <script>
-            (function(){
-            var treeData = $json;
-            var rootID = $root_id;
-            var div = "$div";
-            $js
-            })();
-        </script>
-        </div>
-    """
-    # html_string = "visualization doesn't work yet :("
-
-    # for debugging
-    # outfile  = open("/tmp/pomcp_debug.html","w")
-    # write(outfile,html_string)
-    # close(outfile)
-
-    println(f,html_string)
 end

@@ -14,7 +14,8 @@ function POMCPSolver(;eps=0.01,
                       estimate_value=RolloutEstimator(POMDPToolbox.RandomSolver()),
                       init_V=0.0,
                       init_N=0,
-                      num_sparse_actions=0)
+                      num_sparse_actions=0,
+                      default_action=ExceptionRethrow())
 
     return POMCPSolver(eps,
                        max_depth,
@@ -25,7 +26,8 @@ function POMCPSolver(;eps=0.01,
                        estimate_value,
                        init_V,
                        init_N,
-                       num_sparse_actions)
+                       num_sparse_actions,
+                       default_action)
 end
 
 """
@@ -49,7 +51,8 @@ function POMCPDPWSolver(;eps=0.01,
                       k_action::Float64=10.,
                       init_V=0.0,
                       init_N=0,
-                      next_action=RandomActionGenerator())
+                      next_action=RandomActionGenerator(),
+                      default_action=ExceptionRethrow())
 
     return POMCPDPWSolver(eps,
                        max_depth,
@@ -65,5 +68,6 @@ function POMCPDPWSolver(;eps=0.01,
                        k_action,
                        init_V,
                        init_N,
-                       next_action)
+                       next_action,
+                       default_action)
 end
