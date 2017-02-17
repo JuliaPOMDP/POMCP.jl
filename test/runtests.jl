@@ -4,6 +4,7 @@ using Base.Test
 using POMDPModels
 using POMDPs
 using POMDPToolbox
+using ParticleFilters
 
 using NBInclude
 
@@ -41,7 +42,10 @@ solver = POMCPDPWSolver(tree_queries=100,
                      enable_action_pw=false,
                      rng =MersenneTwister(2))
 test_solver(solver, BabyPOMDP())
-# test_solver(solver, LightDark1D())
+
+
+test_solver(solver, LightDark1D(), updater=SIRParticleFilter(LightDark1D(), 100))
+# test_solver(solver, TigerPOMDP(), updater=DiscreteUpdater
 
 include("visualization.jl")
 nbinclude("../notebooks/Display_Tree.ipynb")

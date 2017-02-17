@@ -176,7 +176,7 @@ function simulate{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,B,POMCPDPWSolver}, h::Belie
     total_N = reduce(add_N, 0, values(h.children))
     if sol.enable_action_pw
         if length(h.children) <= sol.k_action*total_N^sol.alpha_action
-            a = next_action(sol.next_action, pomcp.problem, s, h)
+            a = next_action(sol.next_action, pomcp.problem, h.B, h) # XXX should this be a function of s or h.B?
             if !(a in keys(h.children))
                 h.children[a] = ActNode(a,
                                         init_N(sol.init_N, pomcp.problem, h, a),
@@ -262,14 +262,14 @@ function simulate{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,B,POMCPDPWSolver}, h::Belie
         r = POMDPs.reward(pomcp.problem, s, a, sp)
     end
 
-    R = r + POMDPs.discount(pomcp.problem)*simulate(pomcp, hao, sp, depth+1)
-
     if state_was_generated
         if uses_states_from_planner(hao.B)
             push!(hao.B, sp)
         end
         hao.N += 1
     end
+
+    R = r + POMDPs.discount(pomcp.problem)*simulate(pomcp, hao, sp, depth+1)
 
     best_node.N += 1
     if best_node.V != -Inf

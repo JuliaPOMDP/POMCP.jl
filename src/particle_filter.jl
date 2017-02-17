@@ -1,3 +1,6 @@
+# now uses ParticleCollection from ParticleFilters.jl
+# uncomment below if ParticleFilters ever dies or anything
+#=
 """
 Belief represented by an unweighted collection of particles
 """
@@ -11,6 +14,8 @@ ParticleCollection{S}(particles::AbstractVector{S}) = ParticleCollection{S}(part
 function rand(rng::AbstractRNG, b::ParticleCollection, sample=nothing)
     return b.particles[rand(rng, 1:length(b.particles))]
 end
+mean(pc::ParticleCollection) = mean(pc.particles)
+=#
 
 """
     uses_states_from_planner(belief)

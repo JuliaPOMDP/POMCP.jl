@@ -4,12 +4,13 @@ module POMCP
 import POMDPs
 
 import POMDPs: action, solve
-import Base.rand
+import Base: rand, mean
 import POMDPs: update, updater, initialize_belief
 import POMDPToolbox
 import GenerativeModels
 import StatsBase: WeightVec, sample
 import MCTS: RandomActionGenerator, RolloutEstimator, next_action, estimate_value, init_N, convert_to_policy
+using ParticleFilters
 
 using Compat
 
