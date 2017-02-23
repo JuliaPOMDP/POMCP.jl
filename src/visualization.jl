@@ -10,7 +10,6 @@ blink(n::BeliefNode) = blink(POMCPTreeVisualizer(n))
 typealias NodeDict Dict{Int, Dict{String, Any}}
 
 function create_json(v::POMCPTreeVisualizer)
-    complete = false
     node_dict = NodeDict()
     dict = recursive_push!(node_dict, v.node)
     json = JSON.json(node_dict)

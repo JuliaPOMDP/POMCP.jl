@@ -22,7 +22,8 @@ export
     RootUpdater,
     BeliefNode,
     RootNode,
-    ObservationNode,
+    ObsNode,
+    ActNode,
     POMCPTreeVisualizer,
 
     solve,
@@ -36,6 +37,7 @@ export
     sparse_actions,
     estimate_value,
     extract_belief,
+    add_N,
 
     RandomActionGenerator,
     next_action,

@@ -2,7 +2,7 @@
 # replace recursion with while loop
 # cache simulation results
 
-function create_policy{S}(solver::Union{POMCPSolver,POMCPDPWSolver}, pomdp::POMDPs.POMDP{S})
+function create_policy{S}(solver::AbstractPOMCPSolver, pomdp::POMDPs.POMDP{S})
     if isa(solver.node_belief_updater, DefaultReinvigoratorStub)
         node_belief_updater = DeadReinvigorator{S}()
     else
@@ -27,11 +27,11 @@ end
 
 Simply return a properly constructed POMCPPlanner object.
 """
-function solve{S}(solver::Union{POMCPSolver,POMCPDPWSolver}, pomdp::POMDPs.POMDP{S})
+function solve{S}(solver::AbstractPOMCPSolver, pomdp::POMDPs.POMDP{S})
     create_policy(solver, pomdp)
 end
 
-solve(solver::Union{POMCPSolver,POMCPDPWSolver}, pomdp::POMDPs.POMDP, dummy_policy::Any) = solve(solver, pomdp)
+solve(solver::AbstractPOMCPSolver, pomdp::POMDPs.POMDP, dummy_policy::Any) = solve(solver, pomdp)
 
 """
     function search(pomcp::POMCPPlanner, b::BeliefNode, tree_queries)
