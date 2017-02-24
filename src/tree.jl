@@ -17,10 +17,10 @@ type ObsNode{Belief,A,O} <: BeliefNode{Belief,A,O}
     children::Dict{A,ActNode{A,O,ObsNode{Belief,A,O}}}
 end
 
-type RootNode{RootBelief} <: BeliefNode{RootBelief}
+type RootNode{RootBelief,A,ANodeType} <: BeliefNode{RootBelief}
     N::Int
     B::RootBelief # belief/state distribution
-    children::Dict{Any,ActNode} # ActNode not parameterized here to make initialize_belief more flexible
+    children::Dict{A,ANodeType} # ActNode not parameterized here to make initialize_belief more flexible
 end
 RootNode{RootBelief}(b::RootBelief) = RootNode{RootBelief}(0, b, Dict{Any,ActNode}())
 

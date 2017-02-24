@@ -40,7 +40,7 @@ solver = POMCPDPWSolver(tree_queries=100,
                      eps=0.01,
                      c=10.0,
                      enable_action_pw=false,
-                     rng =MersenneTwister(2))
+                     rng=MersenneTwister(2))
 test_solver(solver, BabyPOMDP())
 
 
