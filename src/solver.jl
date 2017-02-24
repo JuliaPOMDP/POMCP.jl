@@ -41,8 +41,9 @@ Search the tree for the next best move.
 
 If b is not a belief node, the policy will attempt to convert it.
 """
-function search{RootBelief}(pomcp::POMCPPlanner, belief::RootBelief, tree_queries)
-    new_node = RootNode(belief)
+function search{RootBelief,S,A,O,B}(pomcp::POMCPPlanner{S,A,O,B}, belief::RootBelief, tree_queries)
+    ANodeType = ActNode{A, O, ObsNode{B,A,O}}
+    new_node = RootNode{RootBelief, A, ANodeType}(0, belief, Dict{A,ANodeType}())
     return search(pomcp, new_node, tree_queries)
 end
 
