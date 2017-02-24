@@ -3,7 +3,7 @@ abstract BeliefNode{B,A,O}
 # Note: links to parents were taken out because they hadn't been used in anything we've done so far
 # Note: probably don't need the labels, but they don't seem like they would really kill performance
 
-type ActNode{A, O, BNodeType <: BeliefNode} # Need A, O, everything in belief
+type ActNode{A, O, BNodeType <: BeliefNode}
     label::A # for keeping track of which action this corresponds to
     N::Int
     V::Float64

@@ -1,13 +1,13 @@
 """
-    estimate_value(estimator, problem::POMDPs.POMDP, start_state, h::BeliefNode, depth::Int)
+    estimate_value(estimator, problem::POMDPs.POMDP, start_state, h::BeliefNode, steps::Int)
 
 Return an initial unbiased estimate of the value at belief node h.
 
 By default this runs a rollout simulation
 """
 function estimate_value end
-estimate_value(f::Function, pomdp::POMDPs.POMDP, start_state, h::BeliefNode, d::Int) = f(pomdp, start_state, h, steps)
-estimate_value(n::Number, pomdp::POMDPs.POMDP, start_state, h::BeliefNode, d::Int) = convert(Float64, n)
+estimate_value(f::Function, pomdp::POMDPs.POMDP, start_state, h::BeliefNode, steps::Int) = f(pomdp, start_state, h, steps)
+estimate_value(n::Number, pomdp::POMDPs.POMDP, start_state, h::BeliefNode, steps::Int) = convert(Float64, n)
 
 type PORolloutEstimator
     solver::Union{POMDPs.Solver,POMDPs.Policy,Function}
