@@ -15,7 +15,7 @@ end
 
 function action(policy::POMCPPlanner, belief, a=nothing)
     try
-        a = search(policy, belief, policy.solver.tree_queries)
+        a = search(policy, make_node(policy, belief), policy.solver.tree_queries)
     catch ex
         a = default_action(policy.solver.default_action, belief, ex)
     end
@@ -35,18 +35,9 @@ solve(solver::AbstractPOMCPSolver, pomdp::POMDPs.POMDP, dummy_policy::Any) = sol
 
 """
     function search(pomcp::POMCPPlanner, b::BeliefNode, tree_queries)
-    function search(pomcp::POMCPPlanner, b::Any, tree_queries)
 
 Search the tree for the next best move.
-
-If b is not a belief node, the policy will attempt to convert it.
 """
-function search{RootBelief,S,A,O,B}(pomcp::POMCPPlanner{S,A,O,B}, belief::RootBelief, tree_queries)
-    ANodeType = ActNode{A, O, ObsNode{B,A,O}}
-    new_node = RootNode{RootBelief, A, ANodeType}(0, belief, Dict{A,ANodeType}())
-    return search(pomcp, new_node, tree_queries)
-end
-
 function search(pomcp::POMCPPlanner, b::BeliefNode, tree_queries)
     # XXX hack
     pomcp._tree_ref = b
@@ -95,7 +86,6 @@ function simulate{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,B,POMCPSolver}, h::BeliefNo
     end
 	if isempty(h.children)
         action_space_iter = sparse_actions(pomcp, pomcp.problem, h, sol.num_sparse_actions)
-		h.children = Dict{Any,ActNode}()
 		for a in action_space_iter
 			h.children[a] = ActNode(a,
                                     init_N(sol.init_N, pomcp.problem, h, a),
@@ -195,7 +185,6 @@ function simulate{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,B,POMCPDPWSolver}, h::Belie
     else # run through all the actions
         if isempty(h.children)
             action_space_iter = POMDPs.iterator(POMDPs.actions(pomcp.problem))
-            h.children = Dict{Any,ActNode}()
             for a in action_space_iter
                 h.children[a] = ActNode(a,
                                         init_N(sol.init_N, pomcp.problem, h, a),
@@ -280,8 +269,16 @@ function simulate{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,B,POMCPDPWSolver}, h::Belie
     return R
 end
 
+make_node{P<:POMCPPlanner, N<:BeliefNode}(::P, b::N) = b
+
+function make_node{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,B}, belief)
+    ANodeType = ActNode{A, O, ObsNode{B,A,O}}
+    return RootNode{typeof(belief), A, ANodeType}(0, belief, Dict{A,ANodeType}())
+end
+
+
 """
 Add the N's of two nodes - for use in reduce
 """
-add_N(a::ActNode, b::ActNode) = a.N + b.N
-add_N(a::Int, b::ActNode) = a + b.N
+add_N(a::AbstractActNode, b::AbstractActNode) = a.N + b.N
+add_N(a::Int, b::AbstractActNode) = a + b.N

@@ -23,6 +23,7 @@ export
     BeliefNode,
     RootNode,
     ObsNode,
+    AbstractActNode,
     ActNode,
     POMCPTreeVisualizer,
 
@@ -37,6 +38,7 @@ export
     sparse_actions,
     estimate_value,
     extract_belief,
+    convert_estimator,
     add_N,
 
     RandomActionGenerator,

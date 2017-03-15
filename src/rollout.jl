@@ -14,10 +14,10 @@ type PORolloutEstimator
     updater::POMDPs.Updater
 end
 
-type SolvedPORolloutEstimator
-    policy::POMDPs.Policy
-    updater::POMDPs.Updater
-    rng::AbstractRNG
+type SolvedPORolloutEstimator{P<:POMDPs.Policy,U<:POMDPs.Updater,RNG<:AbstractRNG}
+    policy::P
+    updater::U
+    rng::RNG
 end
 
 convert_estimator(ev::Any, solver::AbstractPOMCPSolver, pomdp::POMDPs.POMDP) = ev
@@ -41,9 +41,10 @@ Perform a rollout simulation to estimate the value.
 """
 function rollout(est::SolvedPORolloutEstimator, pomdp::POMDPs.POMDP, start_state, h::BeliefNode, steps::Int)
     b = extract_belief(est.updater, h)
-    sim = POMDPToolbox.RolloutSimulator(rng=est.rng,
-                                        max_steps=steps,
-                                        initial_state=start_state)
+    sim = POMDPToolbox.RolloutSimulator(est.rng,
+                                        Nullable{Any}(start_state),
+                                        Nullable{Float64}(),
+                                        Nullable{Int}(steps))
     return POMDPs.simulate(sim, pomdp, est.policy, est.updater, b)
 end
 

@@ -52,7 +52,7 @@ function recursive_push!(nd::NodeDict, n::RootNode, parent_id=-1)
     return nd
 end
 
-function recursive_push!(nd::NodeDict, n::ActNode, parent_id=-1)
+function recursive_push!(nd::NodeDict, n::AbstractActNode, parent_id=-1)
     id = length(nd) + 1
     if parent_id > 0
         push!(nd[parent_id]["children_ids"], id)
