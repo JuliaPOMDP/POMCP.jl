@@ -94,7 +94,11 @@ function simulate{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,B,POMCPSolver}, h::BeliefNo
 		end
 
         if depth > 0 # no need for a rollout if this is the root node
-            steps_to_eps = ceil(Int, log(sol.eps)/log(POMDPs.discount(pomcp.problem))-depth)
+            if POMDPs.discount(pomcp.problem) == 1.0
+                step_to_eps = typemax(Int)
+            else
+                steps_to_eps = ceil(Int, log(sol.eps)/log(POMDPs.discount(pomcp.problem))-depth)
+            end
             steps = min(sol.max_depth-depth, steps_to_eps)
             return POMDPs.discount(pomcp.problem)^depth * estimate_value(pomcp.solved_estimate, pomcp.problem, s, h, steps)
         else
