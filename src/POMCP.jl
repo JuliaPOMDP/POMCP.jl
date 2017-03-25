@@ -45,7 +45,8 @@ export
     next_action,
 
     RolloutEstimator,
-    PORolloutEstimator,
+    PORollout,
+    FORollout,
 
     ParticleCollection,
     ParticleReinvigorator,
@@ -56,8 +57,10 @@ export
     NoDecision,
     AllSamplesTerminal,
     ExceptionRethrow,
-    default_action
+    default_action,
 
+    # deprecated
+    PORolloutEstimator
 
 include("tree.jl")
 include("particle_filter.jl")

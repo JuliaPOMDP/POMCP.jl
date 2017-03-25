@@ -9,43 +9,70 @@ function estimate_value end
 estimate_value(f::Function, pomdp::POMDPs.POMDP, start_state, h::BeliefNode, steps::Int) = f(pomdp, start_state, h, steps)
 estimate_value(n::Number, pomdp::POMDPs.POMDP, start_state, h::BeliefNode, steps::Int) = convert(Float64, n)
 
-type PORolloutEstimator
+type PORollout
     solver::Union{POMDPs.Solver,POMDPs.Policy,Function}
     updater::POMDPs.Updater
 end
+typealias PORolloutEstimator PORollout # for legacy compatibility
 
-type SolvedPORolloutEstimator{P<:POMDPs.Policy,U<:POMDPs.Updater,RNG<:AbstractRNG}
+type SolvedPORollout{P<:POMDPs.Policy,U<:POMDPs.Updater,RNG<:AbstractRNG}
     policy::P
     updater::U
     rng::RNG
 end
 
-convert_estimator(ev::Any, solver::AbstractPOMCPSolver, pomdp::POMDPs.POMDP) = ev
-function convert_estimator(ev::RolloutEstimator, solver::AbstractPOMCPSolver, pomdp::POMDPs.POMDP)
-    policy = convert_to_policy(ev.solver, pomdp)
-    SolvedPORolloutEstimator(policy, updater(policy), solver.rng)
-end
-function convert_estimator(ev::PORolloutEstimator, solver::AbstractPOMCPSolver, pomdp::POMDPs.POMDP)
-    policy = convert_to_policy(ev.solver, pomdp)
-    SolvedPORolloutEstimator(policy, ev.updater, solver.rng)
+type FORollout # fully observable rollout
+    solver::Union{POMDPs.Solver,POMDPs.Policy}
 end
 
-function estimate_value(estimator::SolvedPORolloutEstimator, pomdp::POMDPs.POMDP, start_state, h::BeliefNode, steps::Int)
+type SolvedFORollout{P<:POMDPs.Policy,RNG<:AbstractRNG}
+    policy::P
+    rng::RNG
+end
+
+convert_estimator(ev::Any, solver::AbstractPOMCPSolver, pomdp::POMDPs.POMDP) = ev
+
+function convert_estimator(ev::RolloutEstimator, solver::AbstractPOMCPSolver, pomdp::POMDPs.POMDP)
+    policy = convert_to_policy(ev.solver, pomdp)
+    SolvedPORollout(policy, updater(policy), solver.rng)
+end
+
+function convert_estimator(ev::PORollout, solver::AbstractPOMCPSolver, pomdp::POMDPs.POMDP)
+    policy = convert_to_policy(ev.solver, pomdp)
+    SolvedPORollout(policy, ev.updater, solver.rng)
+end
+
+function convert_estimator(est::FORollout, solver::AbstractPOMCPSolver, pomdp::POMDPs.POMDP)
+    policy = convert_to_policy(est.solver, pomdp)
+    SolvedFORollout(policy, solver.rng)
+end
+
+
+function estimate_value(estimator::Union{SolvedPORollout,SolvedFORollout}, pomdp::POMDPs.POMDP, start_state, h::BeliefNode, steps::Int)
     rollout(estimator, pomdp, start_state, h, steps)
 end
+
 
 """
     rollout(pomcp::POMCPPlanner, start_state, h::BeliefNode)
 
 Perform a rollout simulation to estimate the value.
 """
-function rollout(est::SolvedPORolloutEstimator, pomdp::POMDPs.POMDP, start_state, h::BeliefNode, steps::Int)
+function rollout(est::SolvedPORollout, pomdp::POMDPs.POMDP, start_state, h::BeliefNode, steps::Int)
     b = extract_belief(est.updater, h)
     sim = POMDPToolbox.RolloutSimulator(est.rng,
                                         Nullable{Any}(start_state),
                                         Nullable{Float64}(),
                                         Nullable{Int}(steps))
     return POMDPs.simulate(sim, pomdp, est.policy, est.updater, b)
+end
+
+function rollout(est::SolvedFORollout, pomdp::POMDPs.POMDP, start_state, h::BeliefNode, steps::Int)
+    sim = POMDPToolbox.RolloutSimulator(est.rng,
+                                        Nullable{Any}(start_state),
+                                        Nullable{Float64}(),
+                                        Nullable{Int}(steps))
+    return POMDPToolbox.simulate(sim, pomdp, est.policy, start_state)
 end
 
 """
