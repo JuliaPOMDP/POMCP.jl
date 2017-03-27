@@ -93,7 +93,7 @@ Fields:
         Random number generator.
         default: Base.GLOBAL_RNG
 
-    node_belief_updater::Updater
+    node_sr_belief_updater::Updater
         Calculates the belief for a new belief node (see notebooks/Belief_and_Particle_Filter_Options.ipynb for more info.)
         default: DefaultReinvigoratorStub() - this will simply keep the particles as described in the paper without doing any reinvigoration.
 
@@ -136,7 +136,7 @@ type POMCPSolver <: AbstractPOMCPSolver
     c::Float64 # UCB exploration constant
     tree_queries::Int
     rng::AbstractRNG
-    node_belief_updater::Union{POMDPs.Updater, DefaultReinvigoratorStub}
+    node_sr_belief_updater::Union{POMDPs.Updater, DefaultReinvigoratorStub}
 
     estimate_value::Any
 
@@ -172,7 +172,7 @@ Fields:
         Random number generator.
         default: Base.GLOBAL_RNG
 
-    node_belief_updater::Updater
+    node_sr_belief_updater::Updater
         Calculates the belief for a new belief node (see notebooks/Belief_and_Particle_Filter_Options.ipynb for more info.)
         default: DefaultReinvigoratorStub() - this will simply keep the particles as described in the paper without doing any reinvigoration.
 
@@ -232,7 +232,7 @@ type POMCPDPWSolver <: AbstractPOMCPSolver
     c::Float64
     tree_queries::Int
     rng::AbstractRNG
-    node_belief_updater::Union{POMDPs.Updater, DefaultReinvigoratorStub}
+    node_sr_belief_updater::Union{POMDPs.Updater, DefaultReinvigoratorStub}
 
     estimate_value::Any
 
@@ -256,7 +256,7 @@ Note, you should construct this using the create_policy function
 type POMCPPlanner{S, A, O, B, SolverType<:AbstractPOMCPSolver} <: POMDPs.Policy
     problem::POMDPs.POMDP{S,A,O}
     solver::SolverType
-    node_belief_updater::POMDPs.Updater{B}
+    node_sr_belief_updater::POMDPs.Updater{B}
     solved_estimate::Any
 
     #XXX hack

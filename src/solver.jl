@@ -3,12 +3,12 @@
 # cache simulation results
 
 function create_policy{S}(solver::AbstractPOMCPSolver, pomdp::POMDPs.POMDP{S})
-    if isa(solver.node_belief_updater, DefaultReinvigoratorStub)
-        node_belief_updater = DeadReinvigorator{S}()
+    if isa(solver.node_sr_belief_updater, DefaultReinvigoratorStub)
+        node_sr_belief_updater = DeadReinvigorator{S}()
     else
-        node_belief_updater = solver.node_belief_updater
+        node_sr_belief_updater = solver.node_sr_belief_updater
     end
-    return POMCPPlanner(pomdp, solver, node_belief_updater,
+    return POMCPPlanner(pomdp, solver, node_sr_belief_updater,
                         convert_estimator(solver.estimate_value, solver, pomdp),
                         Nullable{Any}())
 end
@@ -132,10 +132,10 @@ function simulate{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,B,POMCPSolver}, h::BeliefNo
     if haskey(best_node.children, o)
         hao = best_node.children[o]
     else
-        if isa(pomcp.node_belief_updater, ParticleReinvigorator)
+        if isa(pomcp.node_sr_belief_updater, ParticleReinvigorator)
             hao = ObsNode(o, 0, ParticleCollection{S}(), Dict{A,ActNode{A,O,ObsNode{B,A,O}}}())
         else
-            new_belief = update(pomcp.node_belief_updater, h.B, a, o) # this relies on h.B not being modified
+            new_belief = update(pomcp.node_sr_belief_updater, h.B, a, o) # this relies on h.B not being modified
             hao = ObsNode(o, 0, new_belief, Dict{A,ActNode{A,O,ObsNode{B,A,O}}}())
         end
         best_node.children[o]=hao
@@ -237,10 +237,10 @@ function simulate{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,B,POMCPDPWSolver}, h::Belie
         if haskey(best_node.children, o)
             hao = best_node.children[o]
         else
-            if isa(pomcp.node_belief_updater, ParticleReinvigorator)
-                hao = ObsNode(o, 0, ParticleCollection{S}(), Dict{A,ActNode{A,O,ObsNode{B,A,O}}}())
+            if isa(pomcp.node_sr_belief_updater, ParticleReinvigorator)
+                hao = ObsNode(o, 0, ParticleCollection{Tuple{S,Float64}}(), Dict{A,ActNode{A,O,ObsNode{B,A,O}}}())
             else
-                new_belief = update(pomcp.node_belief_updater, h.B, a, o) # this relies on h.B not being modified
+                new_belief = update(pomcp.node_sr_belief_updater, h.B, a, o) # this relies on h.B not being modified
                 hao = ObsNode(o, 0, new_belief, Dict{A,ActNode{A,O,ObsNode{B,A,O}}}())
             end
             best_node.children[o] = hao
@@ -252,13 +252,13 @@ function simulate{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,B,POMCPDPWSolver}, h::Belie
         os = values(best_node.children)
         wv = WeightVec(Int[node.N for node in os]) # allocation
         hao = sample(sol.rng, os, wv)
-        sp = rand(sol.rng, hao.B)
-        r = POMDPs.reward(pomcp.problem, s, a, sp)
+        sp, r = rand(sol.rng, hao.B)
+        # r = POMDPs.reward(pomcp.problem, s, a, sp)
     end
 
     if state_was_generated
         if uses_states_from_planner(hao.B)
-            push!(hao.B, sp)
+            push!(hao.B, (sp,r))
         end
         hao.N += 1
     end
