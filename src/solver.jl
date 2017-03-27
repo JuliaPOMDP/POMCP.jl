@@ -240,7 +240,7 @@ function simulate{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,B,POMCPDPWSolver}, h::Belie
             if isa(pomcp.node_belief_updater, ParticleReinvigorator)
                 hao = ObsNode(o, 0, ParticleCollection{S}(), Dict{A,ActNode{A,O,ObsNode{B,A,O}}}())
             else
-                new_belief = update(pomcp.node_belief_updater, h.B, a, o) # this relies on h.B not being modified
+                new_belief = update(pomcp.node_belief_updater, h.B, a, o)
                 hao = ObsNode(o, 0, new_belief, Dict{A,ActNode{A,O,ObsNode{B,A,O}}}())
             end
             best_node.children[o] = hao
