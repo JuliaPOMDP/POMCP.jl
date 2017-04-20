@@ -11,17 +11,22 @@ function sparse_actions(pomcp::POMCPPlanner, pomdp::POMDPs.POMDP, h::BeliefNode,
     return sparse_actions(pomcp, pomdp, h.B, num_actions)
 end
 
-function sparse_actions(pomcp::POMCPPlanner, pomdp::POMDPs.POMDP, b::Any, num_actions::Int)
+function sparse_actions{S,A,O}(pomcp::POMCPPlanner, pomdp::POMDPs.POMDP{S,A,O}, b::Any, num_actions::Int)
     if num_actions > 0
-        all_act = collect(POMDPs.iterator(POMDPs.actions(pomdp, b)))
-        selected_act = Array(Any, min(num_actions, length(all_act)))
-        len = length(selected_act)
-        for i in 1:len
-            j = rand(pomcp.solver.rng, 1:length(all_act))
-            selected_act[i] = all_act[j]
-            deleteat!(all_act, j)
+        as = POMDPs.actions(pomdp, b)
+        if POMDPs.implemented(POMDPs.iterator, Tuple{typeof(as)})
+            all_act = collect(POMDPs.iterator(as))
+            selected_act = Array(A, min(num_actions, length(all_act)))
+            len = length(selected_act)
+            for i in 1:len
+                j = rand(pomcp.solver.rng, 1:length(all_act))
+                selected_act[i] = all_act[j]
+                deleteat!(all_act, j)
+            end
+            return selected_act
+        else
+            return A[rand(pomcp.solver.rng, as) for j in 1:num_actions]
         end
-        return selected_act
     else
         return POMDPs.iterator(POMDPs.actions(pomdp, b))
     end
