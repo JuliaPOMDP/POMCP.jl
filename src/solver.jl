@@ -123,7 +123,7 @@ function simulate{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,B,POMCPSolver}, h::BeliefNo
     end
     a = best_node.label
 
-    (sp, o, r) = GenerativeModels.generate_sor(pomcp.problem, s, a, sol.rng)
+    (sp, o, r) = POMDPs.generate_sor(pomcp.problem, s, a, sol.rng)
 
     if r == Inf
         warn("POMCP: +Inf reward. This is not recommended and may cause future errors.")
@@ -227,7 +227,7 @@ function simulate{S,A,O,B}(pomcp::POMCPPlanner{S,A,O,B,POMCPDPWSolver}, h::Belie
         state_was_generated = true
 
         # observation progressive widening
-        (sp, o, r) = GenerativeModels.generate_sor(pomcp.problem, s, a, sol.rng)
+        (sp, o, r) = POMDPs.generate_sor(pomcp.problem, s, a, sol.rng)
 
         if r == Inf
             warn("POMCP: +Inf reward. This is not recommended and may cause future errors.")
