@@ -3,7 +3,6 @@ using POMCP
 using POMDPs
 using POMDPModels
 using POMDPToolbox
-using GenerativeModels
 
 problem = BabyPOMDP();
 rng = MersenneTwister(1);
