@@ -2,3 +2,4 @@ julia 0.5
 JSON
 POMDPs 0.4
 POMDPToolbox
+ParticleFilters
