@@ -30,6 +30,14 @@ type SolvedFORollout{P<:POMDPs.Policy,RNG<:AbstractRNG}
     rng::RNG
 end
 
+type FOValue
+    solver::Union{POMDPs.Solver, POMDPs.Policy}
+end
+
+type SolverFOValue{P<:POMDPs.Policy}
+    policy::P
+end
+
 convert_estimator(ev::Any, solver::AbstractPOMCPSolver, pomdp::POMDPs.POMDP) = ev
 
 function convert_estimator(ev::RolloutEstimator, solver::AbstractPOMCPSolver, pomdp::POMDPs.POMDP)
@@ -47,9 +55,17 @@ function convert_estimator(est::FORollout, solver::AbstractPOMCPSolver, pomdp::P
     SolvedFORollout(policy, solver.rng)
 end
 
+function convert_estimator(est::FOValue, solver::AbstractPOMCPSolver, pomdp::POMDPs.POMDP)
+    policy = convert_to_policy(est.solver, pomdp)
+    SolvedFOValue(policy)
+end
 
 function estimate_value(estimator::Union{SolvedPORollout,SolvedFORollout}, pomdp::POMDPs.POMDP, start_state, h::BeliefNode, steps::Int)
     rollout(estimator, pomdp, start_state, h, steps)
+end
+
+function estimate_value(estimator::FOValue, pomdp::POMDPs.POMDP, start_state, h::BeliefNode, steps::Int)
+    POMDPs.value(estimator.policy, start_state)
 end
 
 

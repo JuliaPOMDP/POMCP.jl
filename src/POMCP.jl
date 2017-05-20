@@ -46,6 +46,7 @@ export
     RolloutEstimator,
     PORollout,
     FORollout,
+    FOValue,
 
     ParticleCollection,
     ParticleReinvigorator,
