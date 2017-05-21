@@ -34,7 +34,7 @@ type FOValue
     solver::Union{POMDPs.Solver, POMDPs.Policy}
 end
 
-type SolverFOValue{P<:POMDPs.Policy}
+type SolvedFOValue{P<:POMDPs.Policy}
     policy::P
 end
 
@@ -64,7 +64,7 @@ function estimate_value(estimator::Union{SolvedPORollout,SolvedFORollout}, pomdp
     rollout(estimator, pomdp, start_state, h, steps)
 end
 
-function estimate_value(estimator::FOValue, pomdp::POMDPs.POMDP, start_state, h::BeliefNode, steps::Int)
+function estimate_value(estimator::SolvedFOValue, pomdp::POMDPs.POMDP, start_state, h::BeliefNode, steps::Int)
     POMDPs.value(estimator.policy, start_state)
 end
 
