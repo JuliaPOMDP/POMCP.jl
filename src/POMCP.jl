@@ -66,7 +66,7 @@ include("tree.jl")
 include("particle_filter.jl")
 include("exceptions.jl")
 
-abstract AbstractPOMCPSolver <: POMDPs.Solver
+abstract type AbstractPOMCPSolver <: POMDPs.Solver end
 
 """
 POMCP Solver type
@@ -145,7 +145,7 @@ type POMCPSolver <: AbstractPOMCPSolver
 
     num_sparse_actions::Int # = 0 or less if not used
     default_action::Any
-end 
+end
 
 """
 POMCP Solver type
@@ -226,7 +226,7 @@ Fields:
 
 For more information on the k and alpha parameters, see Couëtoux, A., Hoock, J.-B., Sokolovska, N., Teytaud, O., & Bonnard, N. (2011). Continuous Upper Confidence Trees. In Learning and Intelligent Optimization. Rome, Italy. Retrieved from http://link.springer.com/chapter/10.1007/978-3-642-25566-3_32
 """
-type POMCPDPWSolver <: AbstractPOMCPSolver
+mutable struct POMCPDPWSolver <: AbstractPOMCPSolver
     eps::Float64 # will stop simulations when discount^depth is less than this
     max_depth::Int
     c::Float64
@@ -253,7 +253,7 @@ Policy that builds a POMCP tree to determine an optimal next action.
 
 Note, you should construct this using the create_policy function
 """
-type POMCPPlanner{S, A, O, B, SolverType<:AbstractPOMCPSolver} <: POMDPs.Policy
+mutable struct POMCPPlanner{S, A, O, B, SolverType<:AbstractPOMCPSolver} <: POMDPs.Policy
     problem::POMDPs.POMDP{S,A,O}
     solver::SolverType
     node_belief_updater::POMDPs.Updater{B}

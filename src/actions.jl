@@ -16,7 +16,7 @@ function sparse_actions{S,A,O}(pomcp::POMCPPlanner, pomdp::POMDPs.POMDP{S,A,O}, 
         as = POMDPs.actions(pomdp, b)
         if POMDPs.implemented(POMDPs.iterator, Tuple{typeof(as)})
             all_act = collect(POMDPs.iterator(as))
-            selected_act = Array(A, min(num_actions, length(all_act)))
+            selected_act = Array{A}(min(num_actions, length(all_act)))
             len = length(selected_act)
             for i in 1:len
                 j = rand(pomcp.solver.rng, 1:length(all_act))

@@ -35,7 +35,7 @@ action(policy, second_root_node);
 delete!(first_root_node.children[a].children, o)
 @test_throws ErrorException update(up, first_root_node, a, o)
 
-type UniformBabyReinvigorator <: ParticleReinvigorator end
+mutable struct UniformBabyReinvigorator <: ParticleReinvigorator end
 
 function POMCP.reinvigorate!(pc::ParticleCollection,
         r::UniformBabyReinvigorator,
@@ -48,7 +48,7 @@ end
 function POMCP.handle_unseen_observation(r::UniformBabyReinvigorator,
         old_node::BeliefNode, a::Bool, o::Bool)
     return ParticleCollection{Bool}([true, false])
-end   
+end
 
 up_with_reinvig = RootUpdater(UniformBabyReinvigorator())
 # artificially simulate particle depletion

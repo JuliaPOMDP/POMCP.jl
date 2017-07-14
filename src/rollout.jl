@@ -9,32 +9,32 @@ function estimate_value end
 estimate_value(f::Function, pomdp::POMDPs.POMDP, start_state, h::BeliefNode, steps::Int) = f(pomdp, start_state, h, steps)
 estimate_value(n::Number, pomdp::POMDPs.POMDP, start_state, h::BeliefNode, steps::Int) = convert(Float64, n)
 
-type PORollout
+mutable struct PORollout
     solver::Union{POMDPs.Solver,POMDPs.Policy,Function}
     updater::POMDPs.Updater
 end
-typealias PORolloutEstimator PORollout # for legacy compatibility
+const PORolloutEstimator = PORollout # for legacy compatibility
 
-type SolvedPORollout{P<:POMDPs.Policy,U<:POMDPs.Updater,RNG<:AbstractRNG}
+mutable struct SolvedPORollout{P<:POMDPs.Policy,U<:POMDPs.Updater,RNG<:AbstractRNG}
     policy::P
     updater::U
     rng::RNG
 end
 
-type FORollout # fully observable rollout
+mutable struct FORollout # fully observable rollout
     solver::Union{POMDPs.Solver,POMDPs.Policy}
 end
 
-type SolvedFORollout{P<:POMDPs.Policy,RNG<:AbstractRNG}
+mutable struct SolvedFORollout{P<:POMDPs.Policy,RNG<:AbstractRNG}
     policy::P
     rng::RNG
 end
 
-type FOValue
+mutable struct FOValue
     solver::Union{POMDPs.Solver, POMDPs.Policy}
 end
 
-type SolvedFOValue{P<:POMDPs.Policy}
+mutable struct SolvedFOValue{P<:POMDPs.Policy}
     policy::P
 end
 

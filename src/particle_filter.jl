@@ -34,7 +34,7 @@ Abstract base for a domain specific device to reinvigorate the particle collecti
 
 For use with POMCP, a subtype of this should implement the functions reinvigorate! and handle_unseen_observation
 """
-abstract ParticleReinvigorator{S} <: POMDPs.Updater{ParticleCollection{S}}
+abstract type ParticleReinvigorator{S} <: POMDPs.Updater end
 
 """
     reinvigorate!(pc::ParticleCollection, r::ParticleReinvigorator, old_node::BeliefNode, a, o)
@@ -48,7 +48,7 @@ function reinvigorate!(pc::ParticleCollection, r::ParticleReinvigorator, old_nod
           POMCP.jl reinvigorate! not implemented for reinvigorator $(typeof(r))\n
           argument types:
               b_old::$(typeof(b_old)),
-              a::$(typeof(a)), 
+              a::$(typeof(a)),
               o::$(typeof(o))
           Did you remember to explicitly import reinvigorate!?
           """)
@@ -59,14 +59,14 @@ end
 
 Create and return a new particle (state) collection of particles consistent with o.
 
-This is called when o has not been previously seen during the state and action 
+This is called when o has not been previously seen during the state and action
 """
 function handle_unseen_observation(r::ParticleReinvigorator, old_node::BeliefNode, a, o)
     error("""
           POMCP.jl: handle_unseen_observation not implemented for reinvigorator $(typeof(r))
           argument types:
               b_old::$(typeof(b_old)),
-              a::$(typeof(a)), 
+              a::$(typeof(a)),
               o::$(typeof(o))
           Did you remember to explicitly import handle_unseen_observation?
           """)
@@ -75,12 +75,12 @@ end
 """
 Default reinvigorator - cannot do anything since there is no domain knowledge
 """
-type DeadReinvigorator{S} <: ParticleReinvigorator{S} end
+mutable struct DeadReinvigorator{S} <: ParticleReinvigorator{S} end
 
 """
 Placeholder for a DeadReinvigorator so that the state type can be inferred during solve()
 """
-type DefaultReinvigoratorStub end
+mutable struct DefaultReinvigoratorStub end
 
 function reinvigorate!(pc::ParticleCollection, r::DeadReinvigorator, old_node::BeliefNode, a, o)
     if length(pc.particles) == 0
@@ -91,7 +91,7 @@ end
 
 handle_unseen_observation(r::DeadReinvigorator, old_node::BeliefNode, a, o) = particle_depletion_error()
 
-particle_depletion_error() = 
+particle_depletion_error() =
     error("""
           POMCP.jl: Particle Depletion! To fix this, you have three options:
                 1) use more tree_queries (will only work for very small problems)

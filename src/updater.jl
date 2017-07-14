@@ -5,7 +5,7 @@ When a new observation is recieved from the main simulation, a RootUpdater simpl
 root node for the action decision on the next time step to the child of the current root node
 corresponding to the observation. That way, all the information from the tree is preserved.
 """
-type RootUpdater{U<:POMDPs.Updater} <: POMDPs.Updater{BeliefNode}
+mutable struct RootUpdater{U<:POMDPs.Updater} <: POMDPs.Updater
     node_belief_updater::U # updates the belief between nodes if necessary
 end
 
