@@ -1,6 +1,6 @@
 # POMCP (Deprecated)
 
-This package is now unmaintained and DEPRECATED in favor of (BasicPOMCP.jl)[https://github.com/JuliaPOMDP/BasicPOMCP.jl] and (POMCPOW.jl)[https://github.com/JuliaPOMDP/POMCPOW.jl]
+This package is now unmaintained and DEPRECATED in favor of [BasicPOMCP.jl](https://github.com/JuliaPOMDP/BasicPOMCP.jl) and [POMCPOW.jl](https://github.com/JuliaPOMDP/POMCPOW.jl)
 
 [![](https://img.shields.io/badge/docs-latest-blue.svg)](https://juliapomdp.github.io/POMCP.jl/latest)
 [![Build Status](https://travis-ci.org/JuliaPOMDP/POMCP.jl.svg?branch=master)](https://travis-ci.org/JuliaPOMDP/POMCP.jl)
