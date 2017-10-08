@@ -1,6 +1,10 @@
 __precompile__()
 module POMCP
 
+if VERSION >= v"0.6.0"
+    warn("The POMCP package is deprecated. Please use BasicPOMCP (https://github.com/JuliaPOMDP/BasicPOMCP.jl) instead.")
+end
+
 import POMDPs
 
 import POMDPs: action, solve
@@ -66,7 +70,7 @@ include("tree.jl")
 include("particle_filter.jl")
 include("exceptions.jl")
 
-abstract AbstractPOMCPSolver <: POMDPs.Solver
+abstract type AbstractPOMCPSolver <: POMDPs.Solver end
 
 """
 POMCP Solver type
